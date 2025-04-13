@@ -1,6 +1,7 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { useAuth } from '../contexts/AuthContext'
+import { motion } from 'framer-motion'
 
 const Register = () => {
   const [email, setEmail] = useState('')
@@ -8,8 +9,84 @@ const Register = () => {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [passwordStrength, setPasswordStrength] = useState(0)
   const { signUp } = useAuth()
   const navigate = useNavigate()
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: { 
+      opacity: 1,
+      transition: { 
+        when: "beforeChildren",
+        staggerChildren: 0.1,
+        duration: 0.3
+      }
+    }
+  }
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: { 
+      y: 0, 
+      opacity: 1,
+      transition: { duration: 0.5 }
+    }
+  }
+  
+  // Calculate password strength
+  useEffect(() => {
+    if (!password) {
+      setPasswordStrength(0)
+      return
+    }
+    
+    let strength = 0
+    
+    // Length check
+    if (password.length >= 8) strength += 1
+    
+    // Contains uppercase
+    if (/[A-Z]/.test(password)) strength += 1
+    
+    // Contains lowercase
+    if (/[a-z]/.test(password)) strength += 1
+    
+    // Contains number
+    if (/[0-9]/.test(password)) strength += 1
+    
+    // Contains special character
+    if (/[^A-Za-z0-9]/.test(password)) strength += 1
+    
+    setPasswordStrength(strength)
+  }, [password])
+  
+  // Clear error after 5 seconds
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError('')
+      }, 5000)
+      
+      return () => clearTimeout(timer)
+    }
+  }, [error])
+  
+  const getStrengthColor = () => {
+    if (passwordStrength <= 1) return 'bg-red-500'
+    if (passwordStrength <= 3) return 'bg-yellow-500'
+    return 'bg-green-500'
+  }
+  
+  const getStrengthText = () => {
+    if (!password) return ''
+    if (passwordStrength <= 1) return 'Weak'
+    if (passwordStrength <= 3) return 'Medium'
+    return 'Strong'
+  }
   
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -44,95 +121,276 @@ const Register = () => {
   }
   
   return (
-    <div className="max-w-md mx-auto">
-      <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold mb-2">Create Your Account</h1>
-        <p className="text-neutral-600">Start exploring the connections between your interests</p>
-      </div>
-      
-      <div className="card">
-        {error && (
-          <div className="mb-4 p-3 bg-red-100 text-red-700 rounded-lg">
-            {error}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
-              Email Address
-            </label>
-            <input
-              type="email"
-              id="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              required
-              className="input"
-              placeholder="your@email.com"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
-              Password
-            </label>
-            <input
-              type="password"
-              id="password"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              required
-              className="input"
-              placeholder="••••••••"
-            />
-          </div>
-          
-          <div>
-            <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-700 mb-1">
-              Confirm Password
-            </label>
-            <input
-              type="password"
-              id="confirmPassword"
-              value={confirmPassword}
-              onChange={(e) => setConfirmPassword(e.target.value)}
-              required
-              className="input"
-              placeholder="••••••••"
-            />
-          </div>
-          
-          <div className="text-sm text-neutral-600">
-            <p>By creating an account, you agree to our:</p>
-            <ul className="list-disc list-inside mt-1 space-y-1">
-              <li><Link to="/terms" className="text-primary-600 hover:text-primary-700">Terms of Service</Link></li>
-              <li><Link to="/privacy" className="text-primary-600 hover:text-primary-700">Privacy Policy</Link></li>
-            </ul>
-          </div>
-          
-          <button
-            type="submit"
-            disabled={loading}
-            className="btn-primary w-full flex justify-center items-center"
+    <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
+      <div className="w-full max-w-md">
+        <motion.div 
+          className="text-center mb-8"
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+        >
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="inline-flex items-center justify-center w-20 h-20 mb-6 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 text-white shadow-lg"
           >
-            {loading ? (
-              <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
-            ) : (
-              <i className="bi bi-person-plus mr-2"></i>
-            )}
-            {loading ? 'Creating Account...' : 'Create Account'}
-          </button>
-        </form>
+            <i className="bi bi-rocket-takeoff text-3xl"></i>
+          </motion.div>
+          <motion.h1 
+            className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-700"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.3 }}
+          >
+            Begin Your Cosmic Journey
+          </motion.h1>
+          <motion.p 
+            className="text-neutral-600"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.4 }}
+          >
+            Create your account to start exploring the universe of knowledge
+          </motion.p>
+        </motion.div>
         
-        <div className="mt-6 text-center">
-          <p className="text-neutral-600">
-            Already have an account?{' '}
-            <Link to="/login" className="text-primary-600 hover:text-primary-700 font-medium">
-              Sign In
-            </Link>
-          </p>
-        </div>
+        <motion.div 
+          className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
+          variants={containerVariants}
+          initial="hidden"
+          animate="visible"
+        >
+          {error && (
+            <motion.div 
+              className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg flex items-start"
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: -20 }}
+              transition={{ duration: 0.3 }}
+            >
+              <i className="bi bi-exclamation-circle text-xl mr-3 mt-0.5"></i>
+              <div>
+                <p className="font-medium">Registration Failed</p>
+                <p className="text-sm">{error}</p>
+              </div>
+            </motion.div>
+          )}
+          
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <motion.div variants={itemVariants}>
+              <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
+                Email Address
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="bi bi-envelope text-gray-400"></i>
+                </div>
+                <input
+                  type="email"
+                  id="email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  className="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 outline-none"
+                  placeholder="your@email.com"
+                />
+              </div>
+            </motion.div>
+            
+            <motion.div variants={itemVariants}>
+              <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
+                Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="bi bi-lock text-gray-400"></i>
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  id="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  className="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 outline-none"
+                  placeholder="••••••••"
+                />
+                <div 
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} text-gray-400 hover:text-gray-600 transition-colors`}></i>
+                </div>
+              </div>
+              
+              {password && (
+                <div className="mt-2">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="w-full bg-gray-200 rounded-full h-2.5">
+                      <div 
+                        className={`h-2.5 rounded-full ${getStrengthColor()}`} 
+                        style={{ width: `${(passwordStrength / 5) * 100}%` }}
+                      ></div>
+                    </div>
+                    <span className="text-xs ml-2 min-w-[50px] text-gray-500">{getStrengthText()}</span>
+                  </div>
+                  <ul className="text-xs text-gray-500 space-y-1 mt-2">
+                    <li className={`flex items-center ${password.length >= 8 ? 'text-green-600' : 'text-gray-500'}`}>
+                      <i className={`bi ${password.length >= 8 ? 'bi-check-circle-fill text-green-500' : 'bi-circle'} mr-1`}></i>
+                      At least 8 characters
+                    </li>
+                    <li className={`flex items-center ${/[A-Z]/.test(password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <i className={`bi ${/[A-Z]/.test(password) ? 'bi-check-circle-fill text-green-500' : 'bi-circle'} mr-1`}></i>
+                      Contains uppercase letter
+                    </li>
+                    <li className={`flex items-center ${/[0-9]/.test(password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <i className={`bi ${/[0-9]/.test(password) ? 'bi-check-circle-fill text-green-500' : 'bi-circle'} mr-1`}></i>
+                      Contains number
+                    </li>
+                    <li className={`flex items-center ${/[^A-Za-z0-9]/.test(password) ? 'text-green-600' : 'text-gray-500'}`}>
+                      <i className={`bi ${/[^A-Za-z0-9]/.test(password) ? 'bi-check-circle-fill text-green-500' : 'bi-circle'} mr-1`}></i>
+                      Contains special character
+                    </li>
+                  </ul>
+                </div>
+              )}
+            </motion.div>
+            
+            <motion.div variants={itemVariants}>
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-700 mb-1">
+                Confirm Password
+              </label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <i className="bi bi-shield-lock text-gray-400"></i>
+                </div>
+                <input
+                  type={showConfirmPassword ? "text" : "password"}
+                  id="confirmPassword"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  required
+                  className="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 outline-none"
+                  placeholder="••••••••"
+                />
+                <div 
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
+                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                >
+                  <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'} text-gray-400 hover:text-gray-600 transition-colors`}></i>
+                </div>
+              </div>
+              
+              {confirmPassword && (
+                <div className="mt-2 flex items-center">
+                  {password === confirmPassword ? (
+                    <span className="text-xs text-green-600 flex items-center">
+                      <i className="bi bi-check-circle-fill text-green-500 mr-1"></i>
+                      Passwords match
+                    </span>
+                  ) : (
+                    <span className="text-xs text-red-600 flex items-center">
+                      <i className="bi bi-x-circle-fill text-red-500 mr-1"></i>
+                      Passwords don't match
+                    </span>
+                  )}
+                </div>
+              )}
+            </motion.div>
+            
+            <motion.div variants={itemVariants} className="text-sm text-neutral-600 bg-gray-50 p-4 rounded-lg border border-gray-200">
+              <p className="font-medium mb-2">By creating an account, you agree to our:</p>
+              <ul className="space-y-1">
+                <li className="flex items-start">
+                  <i className="bi bi-check-circle text-purple-500 mr-2 mt-0.5"></i>
+                  <Link to="/terms" className="text-purple-600 hover:text-purple-700 transition-colors">
+                    Terms of Service
+                  </Link>
+                </li>
+                <li className="flex items-start">
+                  <i className="bi bi-check-circle text-purple-500 mr-2 mt-0.5"></i>
+                  <Link to="/privacy" className="text-purple-600 hover:text-purple-700 transition-colors">
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </motion.div>
+            
+            <motion.div variants={itemVariants}>
+              <motion.button
+                type="submit"
+                disabled={loading}
+                className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-indigo-600 text-white font-medium rounded-lg shadow-md hover:shadow-lg transition-all duration-300 flex justify-center items-center"
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+              >
+                {loading ? (
+                  <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
+                ) : (
+                  <i className="bi bi-rocket-takeoff mr-2"></i>
+                )}
+                {loading ? 'Creating Account...' : 'Begin Your Cosmic Journey'}
+              </motion.button>
+            </motion.div>
+          </form>
+          
+          <motion.div 
+            className="mt-8 text-center"
+            variants={itemVariants}
+          >
+            <div className="relative">
+              <div className="absolute inset-0 flex items-center">
+                <div className="w-full border-t border-gray-200"></div>
+              </div>
+              <div className="relative flex justify-center">
+                <span className="px-4 bg-white text-sm text-gray-500">Or sign up with</span>
+              </div>
+            </div>
+            
+            <div className="mt-4 grid grid-cols-3 gap-3">
+              <motion.button
+                type="button"
+                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <i className="bi bi-google text-red-500 text-lg"></i>
+              </motion.button>
+              <motion.button
+                type="button"
+                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <i className="bi bi-facebook text-blue-600 text-lg"></i>
+              </motion.button>
+              <motion.button
+                type="button"
+                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+              >
+                <i className="bi bi-github text-gray-800 text-lg"></i>
+              </motion.button>
+            </div>
+            
+            <motion.p 
+              className="mt-6 text-neutral-600"
+              variants={itemVariants}
+            >
+              Already have an account?{' '}
+              <motion.span
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-block"
+              >
+                <Link to="/login" className="text-purple-600 hover:text-purple-700 font-medium transition-colors">
+                  Sign In
+                </Link>
+              </motion.span>
+            </motion.p>
+          </motion.div>
+        </motion.div>
       </div>
     </div>
   )

@@ -1,6 +1,7 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 
 const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
+  // Initialize with default values
   const [formData, setFormData] = useState({
     title: '',
     category: 'general',
@@ -11,6 +12,7 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
   const [formErrors, setFormErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
   
+  // Define categories
   const categories = [
     { value: 'art', label: 'Art & Design', icon: 'bi-palette', color: 'bg-rose-500', gradient: 'from-rose-500 to-pink-500' },
     { value: 'science', label: 'Science', icon: 'bi-atom', color: 'bg-blue-500', gradient: 'from-blue-500 to-cyan-500' },
@@ -23,6 +25,7 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
     { value: 'general', label: 'General', icon: 'bi-tag', color: 'bg-gray-500', gradient: 'from-gray-500 to-slate-500' }
   ]
   
+  // Reset form when node changes
   useEffect(() => {
     if (node) {
       setFormData({
@@ -31,10 +34,22 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
         description: node.description || '',
         notes: node.notes || ''
       })
+      // Clear any previous errors
+      setFormErrors({})
+    } else {
+      // Reset to defaults for new node
+      setFormData({
+        title: '',
+        category: 'general',
+        description: '',
+        notes: ''
+      })
+      setFormErrors({})
     }
   }, [node])
   
-  const handleChange = (e) => {
+  // Handle form field changes
+  const handleChange = useCallback((e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
     
@@ -42,9 +57,15 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: null }))
     }
-  }
+  }, [formErrors])
   
-  const validateForm = () => {
+  // Handle category selection
+  const handleCategorySelect = useCallback((categoryValue) => {
+    setFormData(prev => ({ ...prev, category: categoryValue }))
+  }, [])
+  
+  // Validate form fields
+  const validateForm = useCallback(() => {
     const errors = {}
     
     if (!formData.title.trim()) {
@@ -59,8 +80,9 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
     
     setFormErrors(errors)
     return Object.keys(errors).length === 0
-  }
+  }, [formData])
   
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
     
@@ -71,23 +93,31 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
     setIsSubmitting(true)
     
     try {
-      await onSubmit(formData)
+      // Prepare clean data for submission
+      const cleanData = {
+        title: formData.title.trim(),
+        category: formData.category,
+        description: formData.description.trim(),
+        notes: formData.notes.trim()
+      }
+      
+      await onSubmit(cleanData)
     } catch (error) {
       console.error("Error submitting form:", error)
-    } finally {
       setIsSubmitting(false)
     }
   }
   
-  const getCategoryColor = (categoryValue) => {
+  // Helper functions for category styling
+  const getCategoryColor = useCallback((categoryValue) => {
     const category = categories.find(c => c.value === categoryValue)
     return category ? category.color : 'bg-gray-500'
-  }
+  }, [categories])
   
-  const getCategoryGradient = (categoryValue) => {
+  const getCategoryGradient = useCallback((categoryValue) => {
     const category = categories.find(c => c.value === categoryValue)
     return category ? category.gradient : 'from-gray-500 to-slate-500'
-  }
+  }, [categories])
   
   return (
     <form 
@@ -96,10 +126,10 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
     >
       <div className="text-center mb-6">
         <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-700">
-          {node ? 'Update Knowledge Node' : 'Create New Knowledge Node'}
+          {node ? 'Update Cosmic Node' : 'Create New Cosmic Node'}
         </h3>
         <p className="text-neutral-600 mt-2">
-          {node ? 'Refine your cosmic knowledge node' : 'Add a new star to your knowledge universe'}
+          {node ? 'Refine your cosmic knowledge node' : 'Add a new star to your cosmic universe'}
         </p>
       </div>
       
@@ -114,7 +144,7 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
             name="title"
             value={formData.title}
             onChange={handleChange}
-            required
+            autoComplete="off"
             className={`w-full px-5 py-3 pl-12 rounded-xl border-2 ${formErrors.title ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'} bg-white/70 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300`}
             placeholder="e.g., Quantum Physics, Renaissance Art, Jazz Music"
           />
@@ -137,11 +167,11 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
           {categories.map(category => (
             <div 
               key={category.value}
-              onClick={() => setFormData(prev => ({ ...prev, category: category.value }))}
-              className={`flex flex-col items-center p-4 rounded-xl cursor-pointer border-2 transition-all duration-300 transform ${
+              onClick={() => handleCategorySelect(category.value)}
+              className={`flex flex-col items-center p-3 rounded-xl cursor-pointer border-2 transition-all duration-200 ${
                 formData.category === category.value 
                   ? 'border-purple-500 bg-white shadow-md scale-105' 
-                  : 'border-purple-100 hover:border-purple-300 hover:bg-white/80 hover:scale-102'
+                  : 'border-purple-100 hover:border-purple-300 hover:bg-white/80'
               }`}
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gradient-to-br ${
@@ -157,12 +187,14 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
             </div>
           ))}
         </div>
+        {/* Hidden select for form submission */}
         <select
           id="category"
           name="category"
           value={formData.category}
           onChange={handleChange}
           className="hidden"
+          aria-hidden="true"
         >
           {categories.map(category => (
             <option key={category.value} value={category.value}>
@@ -182,10 +214,9 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
             name="description"
             value={formData.description}
             onChange={handleChange}
-            required
-            rows="4"
+            rows="3"
             className={`w-full px-5 py-3 pl-12 rounded-xl border-2 ${formErrors.description ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'} bg-white/70 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300`}
-            placeholder="Describe this knowledge node in detail..."
+            placeholder="Describe this cosmic node in detail..."
           ></textarea>
           <div className="absolute left-3 top-3 w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
             <i className="bi bi-card-text text-white text-sm"></i>
@@ -208,9 +239,9 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
             name="notes"
             value={formData.notes}
             onChange={handleChange}
-            rows="3"
+            rows="2"
             className="w-full px-5 py-3 pl-12 rounded-xl border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 bg-white/70 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
-            placeholder="Add your personal thoughts, questions, or context..."
+            placeholder="Add your personal thoughts or context..."
           ></textarea>
           <div className="absolute left-3 top-3 w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
             <i className="bi bi-journal-text text-white text-sm"></i>
@@ -229,18 +260,18 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
         </button>
         <button
           type="submit"
-          className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px]"
+          className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-md hover:shadow-lg transition-all duration-300"
           disabled={isSubmitting}
         >
           {isSubmitting ? (
             <>
               <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
-              {node ? 'Updating Node...' : 'Creating Node...'}
+              {node ? 'Updating...' : 'Creating...'}
             </>
           ) : (
             <>
               <i className={`bi ${node ? 'bi-check-circle' : 'bi-plus-circle'} mr-2`}></i>
-              {node ? 'Update Knowledge Node' : 'Create Knowledge Node'}
+              {node ? 'Update Node' : 'Create Node'}
             </>
           )}
         </button>

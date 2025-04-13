@@ -105,6 +105,7 @@ async function setupDatabase() {
                       target_node_id UUID REFERENCES public.interest_nodes(id) ON DELETE CASCADE,
                       description TEXT NOT NULL,
                       strength INTEGER DEFAULT 1,
+                      is_manual BOOLEAN DEFAULT false,
                       created_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL,
                       updated_at TIMESTAMP WITH TIME ZONE DEFAULT now() NOT NULL
                     );

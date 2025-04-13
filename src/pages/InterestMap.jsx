@@ -77,36 +77,92 @@ const CosmicKnowledgeNexus = () => { // Renamed from InterestMap
   
   const handleAddNode = async (nodeData) => {
     try {
-      const { success, data, error } = await createInterestNode(nodeData)
+      // Show loading toast
+      const loadingToastId = toast.loading('Creating your cosmic node...');
+      
+      // Call API to create node
+      const { success, data, error, duplicates } = await createInterestNode(nodeData);
       
       if (success) {
-        setNodes(prev => [data, ...prev])
-        toast.success('Interest added successfully!')
-        setIsAddModalOpen(false)
+        // Update state with new node
+        setNodes(prev => [data, ...prev]);
+        
+        // Close modal first
+        setIsAddModalOpen(false);
+        
+        // Then show success message
+        setTimeout(() => {
+          toast.dismiss(loadingToastId);
+          toast.success('Cosmic node created successfully!');
+        }, 300);
       } else {
-        toast.error(error.message || 'Failed to add interest')
+        toast.dismiss(loadingToastId);
+        
+        // Handle duplicate node error specifically
+        if (duplicates && duplicates.length > 0) {
+          const duplicateTitle = duplicates[0].title;
+          toast.error(
+            <div>
+              <p>A node with a similar title already exists:</p>
+              <p className="font-semibold mt-1">"{duplicateTitle}"</p>
+              <p className="text-sm mt-2">Please use a different title.</p>
+            </div>,
+            { autoClose: 5000 }
+          );
+        } else {
+          // Handle other errors
+          toast.error(error?.message || 'Failed to create cosmic node');
+        }
       }
     } catch (error) {
-      console.error('Error adding node:', error)
-      toast.error('An unexpected error occurred')
+      console.error('Error adding node:', error);
+      toast.error('An unexpected error occurred');
     }
   }
   
   const handleUpdateNode = async (nodeData) => {
     try {
-      const { success, data, error } = await updateInterestNode(editingNode.id, nodeData)
+      // Show loading toast
+      const loadingToastId = toast.loading('Updating your cosmic node...');
+      
+      // Call API to update node
+      const { success, data, error, duplicates } = await updateInterestNode(editingNode.id, nodeData);
       
       if (success) {
-        setNodes(prev => prev.map(node => node.id === data.id ? data : node))
-        toast.success('Interest updated successfully!')
-        setIsEditModalOpen(false)
-        setEditingNode(null)
+        // Update state with updated node
+        setNodes(prev => prev.map(node => node.id === data.id ? data : node));
+        
+        // Close modal first
+        setIsEditModalOpen(false);
+        setEditingNode(null);
+        
+        // Then show success message
+        setTimeout(() => {
+          toast.dismiss(loadingToastId);
+          toast.success('Cosmic node updated successfully!');
+        }, 300);
       } else {
-        toast.error(error.message || 'Failed to update interest')
+        toast.dismiss(loadingToastId);
+        
+        // Handle duplicate node error specifically
+        if (duplicates && duplicates.length > 0) {
+          const duplicateTitle = duplicates[0].title;
+          toast.error(
+            <div>
+              <p>A node with a similar title already exists:</p>
+              <p className="font-semibold mt-1">"{duplicateTitle}"</p>
+              <p className="text-sm mt-2">Please use a different title.</p>
+            </div>,
+            { autoClose: 5000 }
+          );
+        } else {
+          // Handle other errors
+          toast.error(error?.message || 'Failed to update cosmic node');
+        }
       }
     } catch (error) {
-      console.error('Error updating node:', error)
-      toast.error('An unexpected error occurred')
+      console.error('Error updating node:', error);
+      toast.error('An unexpected error occurred');
     }
   }
   

@@ -1,6 +1,7 @@
 import { supabase } from '../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 import { generateAIConnections } from './geminiService'
+import { refreshSchemaCache } from '../utils/refreshSchemaCache'
 
 // Fetch all interest nodes for the current user
 export const fetchInterestNodes = async () => {
@@ -43,10 +44,53 @@ export const fetchInterestNodes = async () => {
 // Create a new interest node
 export const createInterestNode = async (nodeData) => {
   try {
+    // Validate required fields
+    if (!nodeData.title || !nodeData.title.trim()) {
+      return { success: false, error: { message: 'Title is required' } }
+    }
+    
+    if (!nodeData.description || !nodeData.description.trim()) {
+      return { success: false, error: { message: 'Description is required' } }
+    }
+    
+    if (!nodeData.category) {
+      return { success: false, error: { message: 'Category is required' } }
+    }
+    
+    // Validate title length
+    if (nodeData.title.trim().length > 50) {
+      return { success: false, error: { message: 'Title must be less than 50 characters' } }
+    }
+    
+    // Clean the data
+    const cleanedData = {
+      title: nodeData.title.trim(),
+      category: nodeData.category,
+      description: nodeData.description.trim(),
+      notes: nodeData.notes ? nodeData.notes.trim() : ''
+    }
+    
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
       throw new Error('User not authenticated')
+    }
+    
+    // Check for duplicate title
+    const { data: existingNodes, error: checkError } = await supabase
+      .from('interest_nodes')
+      .select('id, title')
+      .eq('user_id', user.id)
+      .ilike('title', cleanedData.title)
+    
+    if (checkError) throw checkError
+    
+    if (existingNodes && existingNodes.length > 0) {
+      return { 
+        success: false, 
+        error: { message: 'A node with a similar title already exists' },
+        duplicates: existingNodes
+      }
     }
     
     const { data, error } = await supabase
@@ -55,7 +99,7 @@ export const createInterestNode = async (nodeData) => {
         { 
           id: uuidv4(),
           user_id: user.id,
-          ...nodeData 
+          ...cleanedData 
         }
       ])
       .select()
@@ -71,18 +115,60 @@ export const createInterestNode = async (nodeData) => {
 // Update an existing interest node
 export const updateInterestNode = async (id, nodeData) => {
   try {
+    // Validate required fields
+    if (!nodeData.title || !nodeData.title.trim()) {
+      return { success: false, error: { message: 'Title is required' } }
+    }
+    
+    if (!nodeData.description || !nodeData.description.trim()) {
+      return { success: false, error: { message: 'Description is required' } }
+    }
+    
+    if (!nodeData.category) {
+      return { success: false, error: { message: 'Category is required' } }
+    }
+    
+    // Validate title length
+    if (nodeData.title.trim().length > 50) {
+      return { success: false, error: { message: 'Title must be less than 50 characters' } }
+    }
+    
+    // Clean the data
+    const cleanedData = {
+      title: nodeData.title.trim(),
+      category: nodeData.category,
+      description: nodeData.description.trim(),
+      notes: nodeData.notes ? nodeData.notes.trim() : '',
+      updated_at: new Date().toISOString()
+    }
+    
     const { data: { user } } = await supabase.auth.getUser()
     
     if (!user) {
       throw new Error('User not authenticated')
     }
     
+    // Check for duplicate title but exclude the current node
+    const { data: existingNodes, error: checkError } = await supabase
+      .from('interest_nodes')
+      .select('id, title')
+      .eq('user_id', user.id)
+      .neq('id', id) // Exclude the current node
+      .ilike('title', cleanedData.title)
+    
+    if (checkError) throw checkError
+    
+    if (existingNodes && existingNodes.length > 0) {
+      return { 
+        success: false, 
+        error: { message: 'A node with a similar title already exists' },
+        duplicates: existingNodes
+      }
+    }
+    
     const { data, error } = await supabase
       .from('interest_nodes')
-      .update({
-        ...nodeData,
-        updated_at: new Date().toISOString()
-      })
+      .update(cleanedData)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
@@ -104,14 +190,22 @@ export const deleteInterestNode = async (id) => {
       throw new Error('User not authenticated')
     }
     
+    console.log(`deleteInterestNode: Deleting connections for node with id ${id}`);
+    
     // First delete all connections involving this node
+    // This operation doesn't need to reference the is_manual column
     const { error: connectionsError } = await supabase
       .from('connections')
       .delete()
       .or(`source_node_id.eq.${id},target_node_id.eq.${id}`)
       .eq('user_id', user.id)
     
-    if (connectionsError) throw connectionsError
+    if (connectionsError) {
+      console.error('Error deleting connections for node:', connectionsError);
+      throw connectionsError;
+    }
+    
+    console.log(`deleteInterestNode: Deleting node with id ${id}`);
     
     // Then delete the node itself
     const { error } = await supabase
@@ -120,7 +214,12 @@ export const deleteInterestNode = async (id) => {
       .eq('id', id)
       .eq('user_id', user.id)
     
-    if (error) throw error
+    if (error) {
+      console.error('Error deleting node:', error);
+      throw error;
+    }
+    
+    console.log(`deleteInterestNode: Successfully deleted node with id ${id}`);
     return { success: true }
   } catch (error) {
     console.error('Error deleting interest node:', error)
@@ -143,10 +242,12 @@ export const fetchConnections = async () => {
       throw new Error('User not authenticated')
     }
     
-    console.log("fetchConnections: Querying database for connections");
+    // Instead of trying to use '*' which might include the problematic is_manual column,
+    // explicitly list all the columns we need except is_manual
+    console.log("fetchConnections: Querying database for connections with explicit columns");
     const { data, error } = await supabase
       .from('connections')
-      .select('*')
+      .select('id, user_id, source_node_id, target_node_id, description, strength, created_at, updated_at')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
     
@@ -157,9 +258,13 @@ export const fetchConnections = async () => {
     
     console.log(`fetchConnections: Successfully fetched ${data?.length || 0} connections`);
     
-    // Return empty array if data is null or undefined
-    const safeData = data || [];
-    return { success: true, data: safeData };
+    // Add the is_manual property to each connection with a default value
+    const connectionsWithManualFlag = (data || []).map(conn => ({
+      ...conn,
+      is_manual: false // Default value as per schema
+    }));
+    
+    return { success: true, data: connectionsWithManualFlag };
   } catch (error) {
     console.error('Error fetching connections:', error);
     return { success: false, error };
@@ -189,22 +294,39 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
     
     // Check if this is a manual connection creation
     if (options.manualDescription && selectedNodeIds.length === 2) {
-      // Create a single manual connection
-      const manualConnection = {
+      // Create a single manual connection without the is_manual field
+      // to avoid schema cache issues
+      const connectionData = {
         id: uuidv4(),
         user_id: user.id,
         source_node_id: selectedNodeIds[0],
         target_node_id: selectedNodeIds[1],
         description: options.manualDescription,
-        strength: options.strength || 1,
-        is_manual: true
+        strength: options.strength || 1
+        // Intentionally omitting is_manual
       };
       
-      const { error: insertError } = await supabase
-        .from('connections')
-        .insert([manualConnection])
+      console.log("generateConnections: Creating manual connection without is_manual field");
       
-      if (insertError) throw insertError
+      try {
+        const { error: insertError } = await supabase
+          .from('connections')
+          .insert([connectionData])
+        
+        if (insertError) {
+          console.error('Error inserting manual connection:', insertError);
+          throw insertError;
+        }
+      } catch (insertError) {
+        console.error('Error inserting manual connection:', insertError);
+        throw insertError;
+      }
+      
+      // Add is_manual for the client-side representation
+      const manualConnection = {
+        ...connectionData,
+        is_manual: true
+      };
       
       return { success: true, connections: [manualConnection] };
     }
@@ -214,21 +336,41 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
     
     // Save the generated connections
     if (aiResults.connections && aiResults.connections.length > 0) {
+      // Create connections without the is_manual field to avoid schema cache issues
       const connectionsToInsert = aiResults.connections.map(connection => ({
         id: uuidv4(),
         user_id: user.id,
         source_node_id: connection.sourceNodeId,
         target_node_id: connection.targetNodeId,
         description: connection.description,
-        strength: connection.strength || 1,
+        strength: connection.strength || 1
+        // Intentionally omitting is_manual
+      }));
+      
+      console.log("generateConnections: Creating AI connections without is_manual field");
+      
+      try {
+        const { error: insertError } = await supabase
+          .from('connections')
+          .insert(connectionsToInsert)
+        
+        if (insertError) {
+          console.error('Error inserting AI connections:', insertError);
+          throw insertError;
+        }
+      } catch (insertError) {
+        console.error('Error inserting AI connections:', insertError);
+        throw insertError;
+      }
+      
+      // Add is_manual for the client-side representation
+      const connectionsWithManualFlag = connectionsToInsert.map(conn => ({
+        ...conn,
         is_manual: false
-      }))
+      }));
       
-      const { error: insertError } = await supabase
-        .from('connections')
-        .insert(connectionsToInsert)
-      
-      if (insertError) throw insertError
+      // Update the connections in the aiResults for the return value
+      aiResults.connections = connectionsWithManualFlag;
     }
     
     // Save discovery prompts
@@ -343,13 +485,22 @@ export const deleteConnection = async (id) => {
       throw new Error('User not authenticated')
     }
     
+    console.log(`deleteConnection: Deleting connection with id ${id}`);
+    
+    // Delete operation doesn't need to reference the is_manual column,
+    // so this should work regardless of schema cache issues
     const { error } = await supabase
       .from('connections')
       .delete()
       .eq('id', id)
       .eq('user_id', user.id)
     
-    if (error) throw error
+    if (error) {
+      console.error('Error deleting connection:', error);
+      throw error;
+    }
+    
+    console.log(`deleteConnection: Successfully deleted connection with id ${id}`);
     return { success: true }
   } catch (error) {
     console.error('Error deleting connection:', error)

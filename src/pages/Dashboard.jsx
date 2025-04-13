@@ -58,18 +58,39 @@ const Dashboard = () => {
   
   const handleAddInterest = async (nodeData) => {
     try {
-      const { success, data, error } = await createInterestNode(nodeData)
+      // Show loading toast
+      const loadingToastId = toast.loading('Creating your cosmic node...');
+      
+      // Call API to create node
+      const { success, data, error, duplicates } = await createInterestNode(nodeData);
       
       if (success) {
-        setNodes(prev => [data, ...prev])
-        toast.success('Interest added successfully!')
-        setIsModalOpen(false)
+        setNodes(prev => [data, ...prev]);
+        toast.dismiss(loadingToastId);
+        toast.success('Interest added successfully!');
+        setIsModalOpen(false);
       } else {
-        toast.error(error.message || 'Failed to add interest')
+        toast.dismiss(loadingToastId);
+        
+        // Handle duplicate node error specifically
+        if (duplicates && duplicates.length > 0) {
+          const duplicateTitle = duplicates[0].title;
+          toast.error(
+            <div>
+              <p>A node with a similar title already exists:</p>
+              <p className="font-semibold mt-1">"{duplicateTitle}"</p>
+              <p className="text-sm mt-2">Please use a different title.</p>
+            </div>,
+            { autoClose: 5000 }
+          );
+        } else {
+          // Handle other errors
+          toast.error(error?.message || 'Failed to add interest');
+        }
       }
     } catch (error) {
-      console.error('Error adding interest:', error)
-      toast.error('An unexpected error occurred')
+      console.error('Error adding interest:', error);
+      toast.error('An unexpected error occurred');
     }
   }
   
@@ -322,39 +343,39 @@ const Dashboard = () => {
       {/* Recent Connections */}
       <div className="mb-10">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-indigo-200 relative">
+          <h2 className="text-2xl font-bold text-indigo-800 relative">
             <span className="relative z-10">Celestial Connections</span>
-            <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-indigo-500 to-blue-500 rounded-full"></div>
+            <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-indigo-500 to-purple-500 rounded-full"></div>
           </h2>
-          <Link to="/connections" className="text-indigo-400 hover:text-indigo-300 font-medium flex items-center group">
+          <Link to="/connections" className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center group">
             <span>View All</span>
             <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
           </Link>
         </div>
         
         {connections.length === 0 ? (
-          <div className="p-8 rounded-xl bg-black/40 border border-indigo-800/30 text-center relative overflow-hidden"
-            style={{ boxShadow: '0 0 20px rgba(99, 102, 241, 0.1)' }}>
+          <div className="p-8 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border border-indigo-100 text-center relative overflow-hidden"
+            style={{ boxShadow: '0 4px 20px rgba(99, 102, 241, 0.15)' }}>
             {/* Subtle animated glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-900/10 to-blue-900/10 rounded-xl blur-xl opacity-50"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-200/20 to-purple-200/20 rounded-xl blur-xl opacity-50"></div>
             
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-800 to-blue-800 flex items-center justify-center text-white mx-auto mb-6 relative overflow-hidden"
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-500 to-purple-500 flex items-center justify-center text-white mx-auto mb-6 relative overflow-hidden"
               style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.5)' }}>
               <i className="bi bi-link-45deg text-3xl relative z-10"></i>
-              <div className="absolute inset-0 bg-indigo-500 opacity-0 animate-pulse"
+              <div className="absolute inset-0 bg-white opacity-0 animate-pulse"
                 style={{ 
                   animationDuration: '3s',
                   boxShadow: 'inset 0 0 20px rgba(165, 180, 252, 0.5)'
                 }}>
               </div>
             </div>
-            <h3 className="text-xl font-medium text-indigo-200 mb-3">Discover Celestial Connections</h3>
-            <p className="text-indigo-300 mb-6 max-w-md mx-auto">
+            <h3 className="text-xl font-medium text-indigo-800 mb-3">Discover Celestial Connections</h3>
+            <p className="text-indigo-700 mb-6 max-w-md mx-auto">
               Explore how your cosmic nodes interconnect and reveal hidden patterns across your universe of knowledge.
             </p>
             <Link to="/map" 
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-700 to-blue-700 text-white hover:from-indigo-600 hover:to-blue-600 transition-all duration-300 inline-block"
-              style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 inline-block"
+              style={{ boxShadow: '0 4px 15px rgba(99, 102, 241, 0.3)' }}
             >
               Discover Cosmic Connections
             </Link>
@@ -380,39 +401,39 @@ const Dashboard = () => {
       {/* Discovery Prompts */}
       <div>
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-2xl font-bold text-blue-200 relative">
+          <h2 className="text-2xl font-bold text-indigo-800 relative">
             <span className="relative z-10">Cosmic Insights</span>
-            <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-blue-500 to-cyan-500 rounded-full"></div>
+            <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <Link to="/connections" className="text-blue-400 hover:text-blue-300 font-medium flex items-center group">
+          <Link to="/connections" className="text-indigo-600 hover:text-indigo-800 font-medium flex items-center group">
             <span>Generate New</span>
             <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
           </Link>
         </div>
         
         {discoveryPrompts.length === 0 ? (
-          <div className="p-8 rounded-xl bg-black/40 border border-blue-800/30 text-center relative overflow-hidden"
-            style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' }}>
+          <div className="p-8 rounded-xl bg-gradient-to-br from-purple-50 to-indigo-50 border border-purple-100 text-center relative overflow-hidden"
+            style={{ boxShadow: '0 4px 20px rgba(139, 92, 246, 0.15)' }}>
             {/* Subtle animated glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-blue-900/10 to-cyan-900/10 rounded-xl blur-xl opacity-50"></div>
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-200/20 to-indigo-200/20 rounded-xl blur-xl opacity-50"></div>
             
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-blue-800 to-cyan-800 flex items-center justify-center text-white mx-auto mb-6 relative overflow-hidden"
-              style={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.5)' }}>
+            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center text-white mx-auto mb-6 relative overflow-hidden"
+              style={{ boxShadow: '0 0 15px rgba(139, 92, 246, 0.5)' }}>
               <i className="bi bi-lightbulb text-3xl relative z-10"></i>
-              <div className="absolute inset-0 bg-blue-500 opacity-0 animate-pulse"
+              <div className="absolute inset-0 bg-white opacity-0 animate-pulse"
                 style={{ 
                   animationDuration: '3s',
-                  boxShadow: 'inset 0 0 20px rgba(147, 197, 253, 0.5)'
+                  boxShadow: 'inset 0 0 20px rgba(167, 139, 250, 0.5)'
                 }}>
               </div>
             </div>
-            <h3 className="text-xl font-medium text-blue-200 mb-3">Unlock Cosmic Insights</h3>
-            <p className="text-blue-300 mb-6 max-w-md mx-auto">
+            <h3 className="text-xl font-medium text-indigo-800 mb-3">Unlock Cosmic Insights</h3>
+            <p className="text-indigo-700 mb-6 max-w-md mx-auto">
               Generate AI-powered insights to explore new dimensions and undiscovered territories in your cosmic knowledge universe.
             </p>
             <Link to="/connections" 
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-blue-700 to-cyan-700 text-white hover:from-blue-600 hover:to-cyan-600 transition-all duration-300 inline-block"
-              style={{ boxShadow: '0 0 15px rgba(59, 130, 246, 0.3)' }}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-700 hover:to-indigo-700 transition-all duration-300 inline-block"
+              style={{ boxShadow: '0 4px 15px rgba(139, 92, 246, 0.3)' }}
             >
               Generate Cosmic Insights
             </Link>
