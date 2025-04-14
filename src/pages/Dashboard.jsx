@@ -364,7 +364,7 @@ const Dashboard = () => {
             <span className="relative z-10">Cosmic Insights</span>
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <Link to="/insights-landing" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
+          <Link to="/generate-insights" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
             <span>Generate New</span>
             <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
           </Link>
@@ -390,7 +390,7 @@ const Dashboard = () => {
             <p className="text-purple-300 mb-6 max-w-md mx-auto">
               Generate AI-powered insights to explore new dimensions and undiscovered territories in your cosmic knowledge universe.
             </p>
-            <Link to="/insights-landing"
+            <Link to="/generate-insights"
               className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 inline-block cursor-pointer"
               style={{ boxShadow: '0 0 15px rgba(139, 92, 246, 0.3)' }}
             >

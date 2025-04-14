@@ -1,12 +1,12 @@
 import { supabase } from '../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 import { generateAIConnections } from './geminiService'
-import { 
-  DB_SCHEMA, 
-  getSafeColumns, 
-  addClientFields, 
-  sanitizeForDB, 
-  refreshSchemaCache 
+import {
+  DB_SCHEMA,
+  getSafeColumns,
+  addClientFields,
+  sanitizeForDB,
+  refreshSchemaCache
 } from '../utils/schemaUtils'
 
 // Fetch all interest nodes for the current user
@@ -413,18 +413,25 @@ export const saveDiscoveryPrompt = async (prompt) => {
       throw new Error('User not authenticated')
     }
 
+    // Refresh schema cache to ensure we have the latest schema
+    await refreshSchemaCache()
+
+    // Prepare the data with proper sanitization
+    const promptData = sanitizeForDB(DB_SCHEMA.TABLES.DISCOVERY_PROMPTS, {
+      id: uuidv4(),
+      user_id: user.id,
+      ...prompt
+    })
+
     const { data, error } = await supabase
-      .from('discovery_prompts')
-      .insert([
-        {
-          id: uuidv4(),
-          user_id: user.id,
-          ...prompt
-        }
-      ])
+      .from(DB_SCHEMA.TABLES.DISCOVERY_PROMPTS)
+      .insert([promptData])
       .select()
 
-    if (error) throw error
+    if (error) {
+      console.error('Error saving discovery prompt:', error)
+      throw error
+    }
     return { success: true, data: data[0] }
   } catch (error) {
     console.error('Error saving discovery prompt:', error)
@@ -441,13 +448,19 @@ export const fetchDiscoveryPrompts = async () => {
       throw new Error('User not authenticated')
     }
 
+    // Refresh schema cache to ensure we have the latest schema
+    await refreshSchemaCache()
+
     const { data, error } = await supabase
-      .from('discovery_prompts')
+      .from(DB_SCHEMA.TABLES.DISCOVERY_PROMPTS)
       .select('*')
       .eq('user_id', user.id)
       .order('created_at', { ascending: false })
 
-    if (error) throw error
+    if (error) {
+      console.error('Error fetching discovery prompts:', error)
+      throw error
+    }
     return { success: true, data: data || [] }
   } catch (error) {
     console.error('Error fetching discovery prompts:', error)
@@ -464,14 +477,20 @@ export const toggleFavoritePrompt = async (id, isFavorite) => {
       throw new Error('User not authenticated')
     }
 
+    // Refresh schema cache to ensure we have the latest schema
+    await refreshSchemaCache()
+
     const { data, error } = await supabase
-      .from('discovery_prompts')
+      .from(DB_SCHEMA.TABLES.DISCOVERY_PROMPTS)
       .update({ is_favorite: isFavorite })
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
 
-    if (error) throw error
+    if (error) {
+      console.error('Error toggling favorite status:', error)
+      throw error
+    }
     return { success: true, data: data[0] }
   } catch (error) {
     console.error('Error toggling favorite status:', error)
@@ -519,13 +538,19 @@ export const deleteDiscoveryPrompt = async (id) => {
       throw new Error('User not authenticated')
     }
 
+    // Refresh schema cache to ensure we have the latest schema
+    await refreshSchemaCache()
+
     const { error } = await supabase
-      .from('discovery_prompts')
+      .from(DB_SCHEMA.TABLES.DISCOVERY_PROMPTS)
       .delete()
       .eq('id', id)
       .eq('user_id', user.id)
 
-    if (error) throw error
+    if (error) {
+      console.error('Error deleting discovery prompt:', error)
+      throw error
+    }
     return { success: true }
   } catch (error) {
     console.error('Error deleting discovery prompt:', error)
@@ -542,17 +567,26 @@ export const updateDiscoveryPrompt = async (id, promptData) => {
       throw new Error('User not authenticated')
     }
 
+    // Refresh schema cache to ensure we have the latest schema
+    await refreshSchemaCache()
+
+    // Sanitize the data for the database
+    const sanitizedData = sanitizeForDB(DB_SCHEMA.TABLES.DISCOVERY_PROMPTS, {
+      ...promptData,
+      updated_at: new Date().toISOString()
+    })
+
     const { data, error } = await supabase
-      .from('discovery_prompts')
-      .update({
-        ...promptData,
-        updated_at: new Date().toISOString()
-      })
+      .from(DB_SCHEMA.TABLES.DISCOVERY_PROMPTS)
+      .update(sanitizedData)
       .eq('id', id)
       .eq('user_id', user.id)
       .select()
 
-    if (error) throw error
+    if (error) {
+      console.error('Error updating discovery prompt:', error)
+      throw error
+    }
     return { success: true, data: data[0] }
   } catch (error) {
     console.error('Error updating discovery prompt:', error)

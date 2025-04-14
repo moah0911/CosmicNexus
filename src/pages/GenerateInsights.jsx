@@ -6,13 +6,13 @@ import { fetchInterestNodes, generateConnections } from '../services/interestSer
 
 const GenerateInsights = () => {
   const navigate = useNavigate()
-  
+
   // State for nodes and selection
   const [nodes, setNodes] = useState([])
   const [selectedNodes, setSelectedNodes] = useState([])
   const [loading, setLoading] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
-  
+
   // State for UI
   const [searchTerm, setSearchTerm] = useState('')
   const [filteredNodes, setFilteredNodes] = useState([])
@@ -20,12 +20,12 @@ const GenerateInsights = () => {
   // Load nodes on component mount
   useEffect(() => {
     loadNodes()
-  }, [])
+  }, [navigate])
 
   // Filter nodes when search term changes
   useEffect(() => {
     if (nodes.length > 0) {
-      const filtered = nodes.filter(node => 
+      const filtered = nodes.filter(node =>
         node.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
         node.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         node.category.toLowerCase().includes(searchTerm.toLowerCase())
@@ -38,17 +38,24 @@ const GenerateInsights = () => {
   const loadNodes = async () => {
     try {
       setLoading(true)
-      const { success, data } = await fetchInterestNodes()
-      
-      if (success) {
-        setNodes(data)
-        setFilteredNodes(data)
+      const result = await fetchInterestNodes()
+
+      if (result.success && result.data) {
+        setNodes(result.data)
+        setFilteredNodes(result.data)
+
+        if (result.data.length === 0) {
+          toast.info('You don\'t have any knowledge nodes yet. Create some first!')
+          // Redirect to create node page if there are no nodes
+          setTimeout(() => navigate('/create-node'), 2000)
+        }
       } else {
-        toast.error('Failed to load knowledge nodes')
+        console.error('Failed to load knowledge nodes:', result.error)
+        toast.error('Failed to load knowledge nodes. Please try again.')
       }
     } catch (error) {
       console.error('Error loading nodes:', error)
-      toast.error('An unexpected error occurred')
+      toast.error('An unexpected error occurred while loading nodes')
     } finally {
       setLoading(false)
     }
@@ -75,14 +82,23 @@ const GenerateInsights = () => {
     try {
       setIsGenerating(true)
 
-      const { success, discoveryPrompts, error } = await generateConnections(selectedNodes)
+      // Show a loading toast
+      const loadingToastId = toast.loading('Generating cosmic insights...')
+
+      // Call the API to generate connections and insights
+      const result = await generateConnections(selectedNodes)
+      const { success, error } = result
+
+      // Dismiss the loading toast
+      toast.dismiss(loadingToastId)
 
       if (success) {
         toast.success('Cosmic insights generated successfully!')
-        // Navigate to insights page
+        // Navigate to insights page to see the results
         navigate('/insights')
       } else {
-        toast.error(error?.message || 'Failed to generate insights')
+        console.error('Failed to generate insights:', error)
+        toast.error(error?.message || 'Failed to generate insights. Please try again.')
       }
     } catch (error) {
       console.error('Error generating insights:', error)
@@ -124,11 +140,32 @@ const GenerateInsights = () => {
     visible: { opacity: 1, y: 0 }
   }
 
+  // Show loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-800 to-indigo-800 flex items-center justify-center text-white mb-4 relative overflow-hidden"
+            style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.5)' }}>
+            <i className="bi bi-stars text-2xl relative z-10"></i>
+            <div className="absolute inset-0 bg-purple-500 opacity-0 animate-pulse"
+              style={{
+                animationDuration: '3s',
+                boxShadow: 'inset 0 0 20px rgba(192, 132, 252, 0.5)'
+              }}>
+            </div>
+          </div>
+          <h2 className="text-xl font-medium text-purple-200">Loading knowledge nodes...</h2>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="max-w-5xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <motion.h1 
+        <motion.h1
           className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-400 to-purple-400"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -140,7 +177,7 @@ const GenerateInsights = () => {
         >
           Generate Cosmic Insights
         </motion.h1>
-        <motion.p 
+        <motion.p
           className="text-purple-300 text-lg max-w-3xl"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
@@ -165,7 +202,7 @@ const GenerateInsights = () => {
         <div className="p-6 md:p-8">
           <div className="mb-6">
             <h2 className="text-xl font-bold text-purple-200 mb-4">Select Knowledge Nodes for Insights</h2>
-            
+
             {/* Search Bar */}
             <div className="mb-6">
               <div className="relative">
@@ -216,7 +253,7 @@ const GenerateInsights = () => {
                 <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
               </div>
             ) : (
-              <motion.div 
+              <motion.div
                 className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2 modal-scrollbar"
                 variants={containerVariants}
                 initial="hidden"
@@ -274,7 +311,7 @@ const GenerateInsights = () => {
             >
               <i className="bi bi-x-circle mr-2"></i> Cancel
             </button>
-            
+
             <button
               onClick={handleGenerateInsights}
               disabled={isGenerating || selectedNodes.length < 2}

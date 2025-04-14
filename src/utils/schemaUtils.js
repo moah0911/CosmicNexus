@@ -20,7 +20,7 @@ export const DB_SCHEMA = {
       // Note: relationship_type is intentionally omitted to avoid schema cache issues
     ],
     DISCOVERY_PROMPTS: [
-      'id', 'user_id', 'prompt', 'response', 'is_completed',
+      'id', 'user_id', 'content', 'related_nodes', 'is_favorite',
       'created_at', 'updated_at'
     ]
   },

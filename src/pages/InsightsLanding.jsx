@@ -6,14 +6,14 @@ const InsightsLanding = () => {
   const navigate = useNavigate()
   const [isHovering, setIsHovering] = useState(false)
 
-  // Automatically redirect to insights page after a short delay
+  // Automatically redirect to generate insights page after a short delay
   useEffect(() => {
     const timer = setTimeout(() => {
-      navigate('/insights')
+      navigate('/generate-insights')
     }, 500) // Short delay for smooth transition
 
     return () => clearTimeout(timer)
-  }, [])
+  }, [navigate])
 
   return (
     <div className="relative min-h-[80vh] flex items-center justify-center">
