@@ -284,13 +284,17 @@ const Dashboard = () => {
             <p className="text-purple-300 mb-6 max-w-md mx-auto">
               Begin your journey by adding celestial nodes representing your interests, passions, and areas of curiosity.
             </p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white hover:from-purple-600 hover:to-indigo-600 transition-all duration-300"
+            <Link
+              to="#"
+              onClick={(e) => {
+                e.preventDefault();
+                setIsModalOpen(true);
+              }}
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 inline-block"
               style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
             >
               Create Your First Cosmic Node
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

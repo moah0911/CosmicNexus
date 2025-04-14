@@ -157,7 +157,7 @@ const Connections = () => {
 
         <button
           onClick={() => setIsSelectModalOpen(true)}
-          className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-purple-600 hover:to-indigo-600"
+          className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
           style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
         >
           <i className="bi bi-stars mr-2"></i>
@@ -185,7 +185,7 @@ const Connections = () => {
           </p>
           <button
             onClick={() => setIsSelectModalOpen(true)}
-            className="px-8 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-purple-600 hover:to-indigo-600"
+            className="px-8 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
             style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
           >
             <i className="bi bi-stars mr-2"></i> Discover Connections
@@ -225,7 +225,7 @@ const Connections = () => {
           </div>
           <button
             onClick={() => setIsSelectModalOpen(true)}
-            className="mt-4 md:mt-0 flex items-center text-indigo-400 hover:text-indigo-300 font-medium transition-all duration-300 transform hover:translate-x-1"
+            className="mt-4 md:mt-0 flex items-center text-indigo-400 hover:text-indigo-300 font-medium transition-all duration-300 transform hover:translate-x-1 cursor-pointer"
           >
             <span>Generate New Discoveries</span>
             <i className="bi bi-arrow-right ml-2"></i>
@@ -251,7 +251,7 @@ const Connections = () => {
             </p>
             <button
               onClick={() => setIsSelectModalOpen(true)}
-              className="px-8 py-4 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-indigo-600 hover:to-purple-600"
+              className="px-8 py-4 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-indigo-600 hover:to-purple-600 cursor-pointer"
               style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
             >
               <i className="bi bi-stars mr-2"></i> Generate Cosmic Discoveries
@@ -285,6 +285,12 @@ const Connections = () => {
           <p className="text-lg text-purple-300 mb-6 border-l-4 border-purple-600 pl-4 py-2 bg-purple-900/30 rounded-r-lg">
             Select at least two knowledge nodes to discover cosmic connections and generate celestial insights.
           </p>
+          <div className="mb-4 p-3 bg-indigo-900/30 rounded-lg border border-indigo-700/30 text-indigo-300 text-sm">
+            <p className="flex items-center">
+              <i className="bi bi-info-circle mr-2 text-indigo-400"></i>
+              Click on any node below to select it. You need to select at least 2 nodes to discover connections.
+            </p>
+          </div>
 
           {selectedNodes.length > 0 && (
             <div className="mb-6 p-4 bg-black/40 rounded-xl shadow-sm border border-purple-800/30"
@@ -296,7 +302,7 @@ const Connections = () => {
                 </h3>
                 <button
                   onClick={() => setSelectedNodes([])}
-                  className="text-indigo-400 hover:text-indigo-300 text-sm font-medium px-3 py-1 rounded-full hover:bg-indigo-900/30 transition-colors duration-300"
+                  className="text-indigo-400 hover:text-indigo-300 text-sm font-medium px-3 py-1 rounded-full hover:bg-indigo-900/30 transition-colors duration-300 cursor-pointer"
                 >
                   <i className="bi bi-x-circle mr-1"></i> Clear All
                 </button>
@@ -315,7 +321,7 @@ const Connections = () => {
                       <span className="text-sm text-purple-300 font-medium mr-2">{node.title}</span>
                       <button
                         onClick={() => handleNodeSelect(nodeId)}
-                        className="text-purple-400 hover:text-purple-300 w-5 h-5 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-colors"
+                        className="text-purple-400 hover:text-purple-300 w-5 h-5 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-colors cursor-pointer"
                       >
                         <i className="bi bi-x"></i>
                       </button>
@@ -347,11 +353,11 @@ const Connections = () => {
                       {node.category}
                     </span>
                   </div>
-                  <div className={`w-6 h-6 rounded-full border flex items-center justify-center ${
+                  <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-300 ${
                     selectedNodes.includes(node.id)
-                      ? 'border-purple-500 bg-purple-600 text-white'
+                      ? 'border-purple-500 bg-purple-600 text-white scale-110 shadow-md'
                       : 'border-purple-700/50'
-                  }`}>
+                  }`} style={{ boxShadow: selectedNodes.includes(node.id) ? '0 0 8px rgba(147, 51, 234, 0.4)' : '' }}>
                     {selectedNodes.includes(node.id) && (
                       <i className="bi bi-check text-xs"></i>
                     )}
@@ -360,35 +366,58 @@ const Connections = () => {
                 <p className={`text-sm mt-2 line-clamp-2 ${selectedNodes.includes(node.id) ? 'text-indigo-300' : 'text-purple-400'}`}>
                   {node.description}
                 </p>
+                {selectedNodes.includes(node.id) && (
+                  <div className="mt-2 text-xs text-indigo-400 flex items-center">
+                    <i className="bi bi-check-circle-fill mr-1"></i> Selected
+                  </div>
+                )}
               </div>
             ))}
           </div>
 
-          <div className="flex justify-end space-x-4 mt-8">
-            <button
-              onClick={() => setIsSelectModalOpen(false)}
-              className="px-6 py-3 rounded-xl border border-purple-700/50 text-purple-300 hover:bg-purple-900/30 transition-all duration-300"
-            >
-              <i className="bi bi-x-circle mr-2"></i> Cancel
-            </button>
-            <button
-              onClick={handleGenerateConnections}
-              disabled={selectedNodes.length < 2 || isGenerating}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-purple-600 hover:to-indigo-600"
-              style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
-            >
-              {isGenerating ? (
-                <>
-                  <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
-                  <span>Exploring Cosmic Connections...</span>
-                </>
-              ) : (
-                <>
-                  <i className="bi bi-stars mr-2"></i>
-                  <span>Discover Cosmic Connections</span>
-                </>
-              )}
-            </button>
+          <div className="mt-8 border-t border-purple-800/30 pt-6">
+            <div className="flex flex-col-reverse md:flex-row md:justify-between md:items-center gap-4">
+              <button
+                onClick={() => setIsSelectModalOpen(false)}
+                className="px-6 py-3 rounded-xl border border-purple-700/50 text-purple-300 hover:bg-purple-900/30 transition-all duration-300 cursor-pointer w-full md:w-auto text-center"
+              >
+                <i className="bi bi-x-circle mr-2"></i> Cancel
+              </button>
+
+              <button
+                onClick={handleGenerateConnections}
+                disabled={selectedNodes.length < 2 || isGenerating}
+                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-purple-600 hover:to-indigo-600 cursor-pointer w-full md:w-auto text-center relative overflow-hidden group"
+                style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
+              >
+                <span className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-80"></span>
+                <div className="relative z-10">
+                  {isGenerating ? (
+                    <>
+                      <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
+                      <span>Exploring Cosmic Connections...</span>
+                    </>
+                  ) : (
+                    <>
+                      <i className="bi bi-stars mr-2"></i>
+                      <span>Discover Cosmic Connections</span>
+                      {selectedNodes.length >= 2 && (
+                        <span className="ml-2 bg-purple-500/30 text-white text-xs px-2 py-0.5 rounded-full">
+                          {selectedNodes.length} Selected
+                        </span>
+                      )}
+                    </>
+                  )}
+                </div>
+              </button>
+            </div>
+
+            {selectedNodes.length < 2 && (
+              <p className="text-center text-amber-400 mt-4 text-sm">
+                <i className="bi bi-exclamation-triangle mr-1"></i>
+                Please select at least 2 nodes to discover connections
+              </p>
+            )}
           </div>
         </div>
       </Modal>
@@ -488,13 +517,20 @@ const Connections = () => {
               )}
             </div>
 
-            <div className="flex justify-end mt-8">
+            <div className="mt-8 border-t border-purple-800/30 pt-6 flex flex-col md:flex-row justify-between items-center gap-4">
+              <p className="text-purple-300 text-sm">
+                <i className="bi bi-info-circle mr-1"></i>
+                These connections have been saved to your cosmic web
+              </p>
               <button
                 onClick={() => setIsResultsModalOpen(false)}
-                className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] hover:from-purple-600 hover:to-indigo-600"
+                className="px-8 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] hover:from-purple-600 hover:to-indigo-600 cursor-pointer w-full md:w-auto text-center relative overflow-hidden group"
                 style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
               >
-                <i className="bi bi-check-circle mr-2"></i> Continue Exploration
+                <span className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-80"></span>
+                <div className="relative z-10">
+                  <i className="bi bi-check-circle mr-2"></i> Continue Exploration
+                </div>
               </button>
             </div>
           </div>
