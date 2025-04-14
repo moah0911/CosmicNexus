@@ -11,6 +11,7 @@ import NotFound from './pages/NotFound'
 import CosmicExplorer from './pages/CosmicExplorer'
 import AuthRedirectHandler from './components/AuthRedirectHandler'
 import AuthCallback from './pages/AuthCallback'
+import VerifyOTP from './pages/VerifyOTP'
 
 function App() {
   const { user, loading } = useAuth()
@@ -57,6 +58,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
           <Route path="register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
+          <Route path="verify-otp" element={!user ? <VerifyOTP /> : <Navigate to="/dashboard" />} />
 
           {/* Protected Routes */}
           <Route path="dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />

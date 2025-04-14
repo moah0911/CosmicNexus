@@ -45,20 +45,22 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Get the current site URL (works in both development and production)
-      const siteUrl = window.location.origin;
-
+      // Sign up with OTP verification instead of email confirmation link
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          // Redirect to the auth callback route which will handle the redirect
-          emailRedirectTo: `${siteUrl}/auth/callback`
+          emailRedirectTo: undefined, // Disable redirect URL
+          data: {
+            email: email
+          }
         }
       })
+
       if (error) throw error
-      toast.success('Registration successful! Please check your email for verification.')
-      return { success: true }
+
+      // Return success with email for the verification page
+      return { success: true, email }
     } catch (error) {
       toast.error(error.message || 'Registration failed')
       return { success: false, error }
@@ -106,6 +108,41 @@ export function AuthProvider({ children }) {
     }
   }
 
+  const verifyOTP = async (email, token) => {
+    try {
+      const { error } = await supabase.auth.verifyOtp({
+        email,
+        token,
+        type: 'signup'
+      })
+
+      if (error) throw error
+
+      toast.success('Email verified successfully!')
+      return { success: true }
+    } catch (error) {
+      toast.error(error.message || 'Invalid verification code')
+      return { success: false, error }
+    }
+  }
+
+  const resendOTP = async (email) => {
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email
+      })
+
+      if (error) throw error
+
+      toast.success('Verification code resent to your email')
+      return { success: true }
+    } catch (error) {
+      toast.error(error.message || 'Failed to resend verification code')
+      return { success: false, error }
+    }
+  }
+
   const value = {
     user,
     loading,
@@ -113,6 +150,8 @@ export function AuthProvider({ children }) {
     signIn,
     signOut,
     resetPassword,
+    verifyOTP,
+    resendOTP
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

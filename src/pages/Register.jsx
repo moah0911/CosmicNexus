@@ -105,10 +105,12 @@ const Register = () => {
     setLoading(true)
 
     try {
-      const { success, error } = await signUp(email, password)
+      const { success, error, email: userEmail } = await signUp(email, password)
 
       if (success) {
-        navigate('/login')
+        // Redirect to OTP verification page with email
+        toast.success('Registration successful! Please verify your email.')
+        navigate('/verify-otp', { state: { email: userEmail || email } })
       } else {
         setError(error.message || 'Failed to create account')
       }
