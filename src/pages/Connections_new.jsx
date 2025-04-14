@@ -6,6 +6,7 @@ import ConnectionCard from '../components/ConnectionCard_new'
 import DiscoveryPrompt from '../components/DiscoveryPrompt'
 import ConnectionCreator from '../components/ConnectionCreator_new'
 import Modal from '../components/Modal'
+import { ensureRelationshipTypeColumn } from '../utils/ensureRelationshipTypeColumn'
 
 const Connections = () => {
   // State management
@@ -18,7 +19,7 @@ const Connections = () => {
   const [filterCategory, setFilterCategory] = useState('all')
   const [sortBy, setSortBy] = useState('newest')
   const [viewMode, setViewMode] = useState('grid') // 'grid' or 'list'
-  
+
   // UI state
   const [loading, setLoading] = useState(true)
   const [isGenerating, setIsGenerating] = useState(false)
@@ -51,6 +52,9 @@ const Connections = () => {
   const loadData = async () => {
     try {
       setLoading(true)
+
+      // Ensure the relationship_type column exists
+      await ensureRelationshipTypeColumn()
 
       // Fetch all data in parallel for better performance
       const [nodesResult, connectionsResult, promptsResult] = await Promise.all([
@@ -88,7 +92,7 @@ const Connections = () => {
       filtered = filtered.filter(connection => {
         const sourceNode = nodes.find(node => node.id === connection.source_node_id)
         const targetNode = nodes.find(node => node.id === connection.target_node_id)
-        
+
         return (
           sourceNode?.title.toLowerCase().includes(lowerSearchTerm) ||
           targetNode?.title.toLowerCase().includes(lowerSearchTerm) ||
@@ -102,7 +106,7 @@ const Connections = () => {
       filtered = filtered.filter(connection => {
         const sourceNode = nodes.find(node => node.id === connection.source_node_id)
         const targetNode = nodes.find(node => node.id === connection.target_node_id)
-        
+
         return (
           sourceNode?.category === filterCategory ||
           targetNode?.category === filterCategory
@@ -206,10 +210,10 @@ const Connections = () => {
   // Handle connection deletion
   const handleDeleteConnection = async () => {
     if (!connectionToDelete) return
-    
+
     try {
       const { success, error } = await deleteConnection(connectionToDelete.id)
-      
+
       if (success) {
         // Remove the connection from state
         setConnections(prev => prev.filter(conn => conn.id !== connectionToDelete.id))
@@ -267,13 +271,13 @@ const Connections = () => {
       </div>
 
       {/* Header */}
-      <motion.div 
+      <motion.div
         className="mb-10"
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5 }}
       >
-        <motion.div 
+        <motion.div
           className="inline-block px-4 py-2 bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-full text-sm font-medium mb-4 shadow-lg"
           initial={{ opacity: 0, scale: 0.8 }}
           animate={{ opacity: 1, scale: 1 }}
@@ -281,7 +285,7 @@ const Connections = () => {
         >
           Cosmic Connections
         </motion.div>
-        <motion.h1 
+        <motion.h1
           className="text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-400 to-purple-400"
           style={{
             textShadow: '0 0 15px rgba(147, 51, 234, 0.4)',
@@ -293,7 +297,7 @@ const Connections = () => {
         >
           Connections & Discoveries
         </motion.h1>
-        <motion.p 
+        <motion.p
           className="text-lg text-purple-300 max-w-3xl"
           style={{
             textShadow: '0 0 10px rgba(147, 51, 234, 0.2)',
@@ -522,7 +526,7 @@ const Connections = () => {
                   {filteredConnections.map(connection => {
                     const { sourceNode, targetNode } = getNodesForConnection(connection)
                     if (!sourceNode || !targetNode) return null;
-                    
+
                     return (
                       <ConnectionCard
                         key={connection.id}
@@ -611,10 +615,10 @@ const Connections = () => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <AnimatePresence>
                   {discoveryPrompts
-                    .filter(prompt => 
-                      !searchTerm || 
+                    .filter(prompt =>
+                      !searchTerm ||
                       prompt.content.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                      (prompt.related_nodes && prompt.related_nodes.some(node => 
+                      (prompt.related_nodes && prompt.related_nodes.some(node =>
                         node.toLowerCase().includes(searchTerm.toLowerCase())
                       ))
                     )
@@ -953,7 +957,7 @@ const Connections = () => {
                 {(() => {
                   const { sourceNode, targetNode } = getNodesForConnection(connectionToDelete);
                   if (!sourceNode || !targetNode) return null;
-                  
+
                   return (
                     <>
                       <span className="font-medium text-purple-300">{sourceNode.title}</span>
