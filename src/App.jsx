@@ -14,6 +14,7 @@ import AuthCallback from './pages/AuthCallback'
 import RegistrationSuccess from './pages/RegistrationSuccess'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
+import SimpleMouseTrail from './components/SimpleMouseTrail'
 
 function App() {
   const { user, loading } = useAuth()
@@ -51,6 +52,9 @@ function App() {
     <>
       {/* Add the AuthRedirectHandler to handle authentication redirects */}
       <AuthRedirectHandler />
+
+      {/* Add mouse trail effect globally */}
+      <SimpleMouseTrail />
 
       <Routes>
         {/* Auth callback route - outside of Layout to handle redirects */}

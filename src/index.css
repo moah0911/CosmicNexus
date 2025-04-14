@@ -4,7 +4,7 @@
 
 @layer base {
   body {
-    @apply min-h-screen font-sans bg-white text-neutral-900;
+    @apply min-h-screen font-sans bg-black text-neutral-900;
   }
 
   /* When modal is open, prevent background scrolling but maintain position */

@@ -2,7 +2,6 @@ import { Outlet } from 'react-router-dom'
 import { AnimatePresence } from 'framer-motion'
 import Navbar from './Navbar'
 import Footer from './Footer'
-import MouseTrail from './MouseTrail'
 import PageTransition from './PageTransition'
 import AnimatedBackground from './AnimatedBackground'
 import { useAuth } from '../contexts/AuthContext'
@@ -31,11 +30,6 @@ const Layout = () => {
 
       {/* Subtle gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-b from-purple-900/10 to-black/30 z-0 pointer-events-none"></div>
-
-      {/* Mouse trail with cosmic effect */}
-      <div className="fixed inset-0 pointer-events-none z-[999]">
-        <MouseTrail />
-      </div>
       <Navbar />
       <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
         <AnimatePresence mode="wait">
