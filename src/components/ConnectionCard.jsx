@@ -46,6 +46,24 @@ const ConnectionCard = ({ connection, sourceNode, targetNode }) => {
     }
   }
 
+  // Get icon for relationship type
+  const getRelationshipIcon = (relationshipType) => {
+    switch (relationshipType) {
+      case 'influences': return 'bi-arrow-right'
+      case 'inspires': return 'bi-lightbulb'
+      case 'contrasts': return 'bi-shuffle'
+      case 'builds_on': return 'bi-layers'
+      case 'complements': return 'bi-puzzle'
+      default: return 'bi-link'
+    }
+  }
+
+  // Format relationship type for display
+  const formatRelationshipType = (relationshipType) => {
+    if (!relationshipType) return 'related'
+    return relationshipType.replace('_', ' ')
+  }
+
   return (
     <div className="connection-card bg-black/40 border border-purple-800/30 hover:shadow-lg transition-all duration-300"
       style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.05)' }}>
@@ -55,8 +73,9 @@ const ConnectionCard = ({ connection, sourceNode, targetNode }) => {
             <i className={`bi ${getCategoryIcon(sourceNode.category)}`}></i>
           </div>
           <h3 className="font-medium text-purple-300">{sourceNode.title}</h3>
-          <div className="flex items-center justify-center w-6 h-6 rounded-full bg-black/60 shadow-sm border border-purple-700/30">
-            <i className="bi bi-arrow-right text-purple-400"></i>
+          <div className="flex items-center justify-center px-3 py-1 rounded-full bg-black/60 shadow-sm border border-purple-700/30">
+            <i className={`bi ${getRelationshipIcon(connection.relationship_type)} text-purple-400 mr-1`}></i>
+            <span className="text-xs text-purple-300 capitalize">{formatRelationshipType(connection.relationship_type)}</span>
           </div>
           <div className={`flex items-center justify-center w-8 h-8 rounded-full bg-${getCategoryColor(targetNode.category)}-900/40 text-${getCategoryColor(targetNode.category)}-400 border border-${getCategoryColor(targetNode.category)}-700/30`}>
             <i className={`bi ${getCategoryIcon(targetNode.category)}`}></i>

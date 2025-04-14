@@ -3,6 +3,7 @@ import { toast } from 'react-toastify'
 import { fetchInterestNodes, fetchConnections, generateConnections, fetchDiscoveryPrompts } from '../services/interestService'
 import ConnectionCard from '../components/ConnectionCard'
 import DiscoveryPrompt from '../components/DiscoveryPrompt'
+import ConnectionCreator from '../components/ConnectionCreator'
 import Modal from '../components/Modal'
 
 const Connections = () => {
@@ -14,6 +15,7 @@ const Connections = () => {
   const [isGenerating, setIsGenerating] = useState(false)
   const [isSelectModalOpen, setIsSelectModalOpen] = useState(false)
   const [isResultsModalOpen, setIsResultsModalOpen] = useState(false)
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false)
   const [generationResults, setGenerationResults] = useState(null)
 
   useEffect(() => {
@@ -103,6 +105,15 @@ const Connections = () => {
     return { sourceNode, targetNode }
   }
 
+  // Handle manual connection creation
+  const handleConnectionCreated = (newConnection) => {
+    // Add the new connection to the state
+    setConnections(prev => [newConnection, ...prev])
+
+    // Close the modal
+    setIsCreateModalOpen(false)
+  }
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-[60vh]">
@@ -155,14 +166,25 @@ const Connections = () => {
           </p>
         </div>
 
-        <button
-          onClick={() => setIsSelectModalOpen(true)}
-          className="mt-4 md:mt-0 px-6 py-3 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
-          style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
-        >
-          <i className="bi bi-stars mr-2"></i>
-          <span>Discover New Connections</span>
-        </button>
+        <div className="flex flex-col md:flex-row gap-3 mt-4 md:mt-0">
+          <button
+            onClick={() => setIsCreateModalOpen(true)}
+            className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-indigo-600 hover:to-purple-600 cursor-pointer"
+            style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
+          >
+            <i className="bi bi-link-45deg mr-2"></i>
+            <span>Create Manual Connection</span>
+          </button>
+
+          <button
+            onClick={() => setIsSelectModalOpen(true)}
+            className="px-6 py-3 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
+            style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
+          >
+            <i className="bi bi-stars mr-2"></i>
+            <span>Discover AI Connections</span>
+          </button>
+        </div>
       </div>
 
       {/* Connections List */}
@@ -183,13 +205,23 @@ const Connections = () => {
           <p className="text-purple-300 mb-6 max-w-lg mx-auto">
             Select multiple knowledge nodes to discover the cosmic threads that connect them across your intellectual universe.
           </p>
-          <button
-            onClick={() => setIsSelectModalOpen(true)}
-            className="px-8 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
-            style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
-          >
-            <i className="bi bi-stars mr-2"></i> Discover Connections
-          </button>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <button
+              onClick={() => setIsCreateModalOpen(true)}
+              className="px-8 py-4 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-indigo-600 hover:to-purple-600 cursor-pointer"
+              style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
+            >
+              <i className="bi bi-link-45deg mr-2"></i> Create Manual Connection
+            </button>
+
+            <button
+              onClick={() => setIsSelectModalOpen(true)}
+              className="px-8 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
+              style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
+            >
+              <i className="bi bi-stars mr-2"></i> Discover AI Connections
+            </button>
+          </div>
         </div>
       ) : (
         <div className="space-y-6 mb-12">
@@ -225,10 +257,11 @@ const Connections = () => {
           </div>
           <button
             onClick={() => setIsSelectModalOpen(true)}
-            className="mt-4 md:mt-0 flex items-center text-indigo-400 hover:text-indigo-300 font-medium transition-all duration-300 transform hover:translate-x-1 cursor-pointer"
+            className="mt-4 md:mt-0 px-4 py-2 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-indigo-600 hover:to-purple-600 cursor-pointer text-sm"
+            style={{ boxShadow: '0 0 10px rgba(99, 102, 241, 0.3)' }}
           >
+            <i className="bi bi-stars mr-2"></i>
             <span>Generate New Discoveries</span>
-            <i className="bi bi-arrow-right ml-2"></i>
           </button>
         </div>
 
@@ -254,7 +287,7 @@ const Connections = () => {
               className="px-8 py-4 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-indigo-600 hover:to-purple-600 cursor-pointer"
               style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
             >
-              <i className="bi bi-stars mr-2"></i> Generate Cosmic Discoveries
+              <i className="bi bi-stars mr-2"></i> Generate AI Discoveries
             </button>
           </div>
         ) : (
@@ -535,6 +568,19 @@ const Connections = () => {
             </div>
           </div>
         )}
+      </Modal>
+
+      {/* Manual Connection Creation Modal */}
+      <Modal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        title="Create Cosmic Connection"
+      >
+        <ConnectionCreator
+          nodes={nodes}
+          onConnectionCreated={handleConnectionCreated}
+          onCancel={() => setIsCreateModalOpen(false)}
+        />
       </Modal>
     </div>
   )
