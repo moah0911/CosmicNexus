@@ -11,11 +11,14 @@ export const useDraggable = (ref, options = {}) => {
     initialPosition = { x: 0, y: 0 },
     bounds = null,
     disabled = false,
+    onDragStart = () => {},
+    onDragEnd = () => {}
   } = options;
 
   const [isDragging, setIsDragging] = useState(false);
   const [position, setPosition] = useState(initialPosition);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+  const [elementOffset, setElementOffset] = useState({ x: 0, y: 0 });
 
   // Get client coordinates from either mouse or touch event
   const getClientCoords = useCallback((e) => {
@@ -43,60 +46,71 @@ export const useDraggable = (ref, options = {}) => {
     // Set dragging state
     setIsDragging(true);
 
+    // Get element's current position
+    const rect = ref.current.getBoundingClientRect();
+    setElementOffset({
+      x: rect.left,
+      y: rect.top
+    });
+
     // Get coordinates
     const coords = getClientCoords(e);
 
     // Store the initial position
     setStartPos({
-      x: coords.clientX - position.x,
-      y: coords.clientY - position.y,
+      x: coords.clientX,
+      y: coords.clientY,
     });
-  }, [disabled, position, ref, getClientCoords]);
+
+    // Call onDragStart callback
+    onDragStart();
+  }, [disabled, ref, getClientCoords, onDragStart]);
 
   // Handle dragging (mouse move or touch move)
   const handleMove = useCallback((e) => {
-    if (!isDragging) return;
+    if (!isDragging || !ref.current) return;
 
     // Get coordinates
     const coords = getClientCoords(e);
 
-    // Calculate new position
-    let newX = coords.clientX - startPos.x;
-    let newY = coords.clientY - startPos.y;
+    // Calculate new position (delta from start position + initial element position)
+    let deltaX = coords.clientX - startPos.x;
+    let deltaY = coords.clientY - startPos.y;
+
+    let newX = elementOffset.x + deltaX;
+    let newY = elementOffset.y + deltaY;
 
     // Apply bounds if provided
-    if (bounds && ref.current) {
+    if (bounds) {
       const rect = ref.current.getBoundingClientRect();
+      const width = rect.width;
+      const height = rect.height;
 
-      if (bounds.left !== undefined) {
-        newX = Math.max(bounds.left, newX);
-      }
-      if (bounds.right !== undefined) {
-        newX = Math.min(bounds.right - rect.width, newX);
-      }
-      if (bounds.top !== undefined) {
-        newY = Math.max(bounds.top, newY);
-      }
-      if (bounds.bottom !== undefined) {
-        newY = Math.min(bounds.bottom - rect.height, newY);
-      }
+      // Ensure the modal stays within the viewport
+      if (newX < 0) newX = 0;
+      if (newY < 0) newY = 0;
+      if (newX + width > window.innerWidth) newX = window.innerWidth - width;
+      if (newY + height > window.innerHeight) newY = window.innerHeight - height;
     }
 
     // Update position
     setPosition({ x: newX, y: newY });
-  }, [isDragging, startPos, bounds, ref, getClientCoords]);
+  }, [isDragging, startPos, elementOffset, bounds, ref, getClientCoords]);
 
   // Handle end dragging (mouse up or touch end)
   const handleEnd = useCallback(() => {
-    setIsDragging(false);
-  }, []);
+    if (isDragging) {
+      setIsDragging(false);
+      onDragEnd(position);
+    }
+  }, [isDragging, position, onDragEnd]);
 
   // Add and remove event listeners for mouse events
   useEffect(() => {
     if (disabled) return;
 
     // Mouse events
-    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mousemove', handleMove, { passive: false });
     document.addEventListener('mouseup', handleEnd);
 
     // Touch events
@@ -123,7 +137,7 @@ export const useDraggable = (ref, options = {}) => {
     const element = ref.current;
 
     // Mouse events
-    element.addEventListener('mousedown', handleStart);
+    element.addEventListener('mousedown', handleStart, { passive: false });
 
     // Touch events
     element.addEventListener('touchstart', handleStart, { passive: false });
@@ -137,30 +151,20 @@ export const useDraggable = (ref, options = {}) => {
     };
   }, [ref, handleStart, disabled]);
 
-  // Update bounds when window is resized
+  // Reset position when window is resized
   useEffect(() => {
     if (disabled) return;
 
     const handleResize = () => {
       if (isDragging) return;
 
-      // Keep the modal within the viewport after resize
-      if (bounds && ref.current) {
+      // Center the modal on resize
+      if (ref.current) {
         const rect = ref.current.getBoundingClientRect();
-        let newX = position.x;
-        let newY = position.y;
+        const newX = (window.innerWidth - rect.width) / 2;
+        const newY = (window.innerHeight - rect.height) / 2;
 
-        if (rect.right > window.innerWidth) {
-          newX = window.innerWidth - rect.width;
-        }
-
-        if (rect.bottom > window.innerHeight) {
-          newY = window.innerHeight - rect.height;
-        }
-
-        if (newX !== position.x || newY !== position.y) {
-          setPosition({ x: newX, y: newY });
-        }
+        setPosition({ x: newX, y: newY });
       }
     };
 
@@ -169,11 +173,39 @@ export const useDraggable = (ref, options = {}) => {
     return () => {
       window.removeEventListener('resize', handleResize);
     };
-  }, [disabled, isDragging, position, bounds, ref]);
+  }, [disabled, isDragging, ref]);
+
+  // Function to center the element in the viewport
+  const centerElement = useCallback(() => {
+    if (ref.current) {
+      const rect = ref.current.getBoundingClientRect();
+      const newX = (window.innerWidth - rect.width) / 2;
+      const newY = (window.innerHeight - rect.height) / 2;
+
+      // Ensure we don't position offscreen
+      const safeX = Math.max(0, Math.min(newX, window.innerWidth - rect.width));
+      const safeY = Math.max(0, Math.min(newY, window.innerHeight - rect.height));
+
+      setPosition({ x: safeX, y: safeY });
+    }
+  }, [ref]);
+
+  // Initialize position on first render
+  useEffect(() => {
+    if (!disabled && ref.current) {
+      // Use a short timeout to ensure the element is rendered with its final size
+      const timer = setTimeout(() => {
+        centerElement();
+      }, 50);
+
+      return () => clearTimeout(timer);
+    }
+  }, [disabled, ref, centerElement]);
 
   return {
     isDragging,
     position,
     setPosition,
+    reset: centerElement
   };
 };

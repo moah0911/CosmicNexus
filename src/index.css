@@ -48,6 +48,35 @@
     @apply btn bg-gradient-to-r from-gray-700 to-gray-800 text-gray-200 hover:from-gray-800 hover:to-gray-900 focus:ring-gray-600 border border-gray-600;
   }
 
+  /* Modal dragging styles */
+  .dragging {
+    @apply cursor-grabbing;
+    user-select: none;
+    box-shadow: 0 15px 60px rgba(124, 58, 237, 0.7) !important;
+    opacity: 0.98;
+  }
+
+  /* Improved scrollbar for modals */
+  .modal-scrollbar {
+    scrollbar-width: thin;
+    scrollbar-color: rgba(139, 92, 246, 0.3) rgba(0, 0, 0, 0.1);
+  }
+
+  .modal-scrollbar::-webkit-scrollbar {
+    width: 8px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-track {
+    background: rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+  }
+
+  .modal-scrollbar::-webkit-scrollbar-thumb {
+    background-color: rgba(139, 92, 246, 0.3);
+    border-radius: 4px;
+    border: 2px solid transparent;
+  }
+
   .btn-outline {
     @apply btn border border-gray-600 text-gray-300 hover:bg-gray-700 focus:ring-gray-500;
   }
