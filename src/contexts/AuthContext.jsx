@@ -45,11 +45,15 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
+      // Get the current site URL (works in both development and production)
+      const siteUrl = window.location.origin;
+
       const { error } = await supabase.auth.signUp({
         email,
         password,
         options: {
-          emailRedirectTo: 'https://cosmicnexus.onrender.com/login'
+          // Redirect to the auth callback route which will handle the redirect
+          emailRedirectTo: `${siteUrl}/auth/callback`
         }
       })
       if (error) throw error
@@ -87,8 +91,11 @@ export function AuthProvider({ children }) {
 
   const resetPassword = async (email) => {
     try {
+      // Get the current site URL (works in both development and production)
+      const siteUrl = window.location.origin;
+
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: 'https://cosmicnexus.onrender.com/reset-password',
+        redirectTo: `${siteUrl}/auth/callback`,
       })
       if (error) throw error
       toast.success('Password reset email sent')
