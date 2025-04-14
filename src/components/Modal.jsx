@@ -91,7 +91,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             >
             <motion.div
               ref={modalRef}
-              className="bg-black/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-xl md:max-w-2xl max-h-[80vh] overflow-y-auto relative text-purple-200 mx-auto cursor-move"
+              className="bg-black/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-xl md:max-w-2xl max-h-[90vh] overflow-y-auto relative text-purple-200 mx-auto cursor-move"
               style={{
                 boxShadow: '0 10px 50px rgba(124, 58, 237, 0.5)',
                 WebkitOverflowScrolling: 'touch', // Improve scrolling on iOS
@@ -99,8 +99,11 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                 scrollbarWidth: 'thin', // Thin scrollbars in Firefox
                 border: '1px solid rgba(139, 92, 246, 0.3)',
                 backgroundImage: 'radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.15), transparent 70%)',
-                transform: isDragging ? `translate(${position.x}px, ${position.y}px)` : undefined,
-                transition: isDragging ? 'none' : 'transform 0.3s ease-out'
+                transition: isDragging ? 'none' : 'transform 0.3s ease-out',
+                position: 'fixed',
+                top: '50%',
+                left: '50%',
+                transform: isDragging ? `translate(calc(-50% + ${position.x}px), calc(-50% + ${position.y}px))` : 'translate(-50%, -50%)',
               }}
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
