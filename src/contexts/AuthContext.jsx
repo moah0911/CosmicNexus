@@ -47,16 +47,6 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // First, check if the email is already registered
-      const { data: { users }, error: checkError } = await supabase.auth.admin.listUsers({
-        filter: { email }
-      }).catch(() => ({ data: { users: [] }, error: null }));
-
-      // If we can't check (likely due to permissions), proceed anyway
-      if (users && users.length > 0) {
-        throw new Error('Email is already registered');
-      }
-
       // Generate a 6-digit OTP code
       const otp = generateOTP(6);
 
@@ -69,11 +59,15 @@ export function AuthProvider({ children }) {
       // Store the email and password temporarily for later registration
       sessionStorage.setItem('pendingRegistration', JSON.stringify({ email, password }));
 
-      toast.success('Verification code sent to your email');
+      // Log the OTP for testing purposes
+      console.log('Generated OTP for testing:', otp);
+
+      toast.success('Verification code sent to your email. Check the console for the code.');
 
       // Return success with email for the verification page
       return { success: true, email };
     } catch (error) {
+      console.error('Sign up error:', error);
       toast.error(error.message || 'Registration failed');
       return { success: false, error };
     }

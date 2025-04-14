@@ -105,14 +105,15 @@ const Register = () => {
     setLoading(true)
 
     try {
-      const { success, error, email: userEmail } = await signUp(email, password)
+      const result = await signUp(email, password);
+      console.log('Sign up result:', result);
 
-      if (success) {
+      if (result.success) {
         // Redirect to OTP verification page with email
-        toast.success('Registration successful! Please verify your email.')
-        navigate('/verify-otp', { state: { email: userEmail || email } })
+        console.log('Redirecting to OTP verification page with email:', result.email || email);
+        navigate('/verify-otp', { state: { email: result.email || email } });
       } else {
-        setError(error.message || 'Failed to create account')
+        setError(result.error?.message || 'Failed to create account');
       }
     } catch (err) {
       setError('An unexpected error occurred')
