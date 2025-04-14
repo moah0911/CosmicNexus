@@ -14,99 +14,99 @@ const Register = () => {
   const [passwordStrength, setPasswordStrength] = useState(0)
   const { signUp } = useAuth()
   const navigate = useNavigate()
-  
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         when: "beforeChildren",
         staggerChildren: 0.1,
         duration: 0.3
       }
     }
   }
-  
+
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
+    visible: {
+      y: 0,
       opacity: 1,
       transition: { duration: 0.5 }
     }
   }
-  
+
   // Calculate password strength
   useEffect(() => {
     if (!password) {
       setPasswordStrength(0)
       return
     }
-    
+
     let strength = 0
-    
+
     // Length check
     if (password.length >= 8) strength += 1
-    
+
     // Contains uppercase
     if (/[A-Z]/.test(password)) strength += 1
-    
+
     // Contains lowercase
     if (/[a-z]/.test(password)) strength += 1
-    
+
     // Contains number
     if (/[0-9]/.test(password)) strength += 1
-    
+
     // Contains special character
     if (/[^A-Za-z0-9]/.test(password)) strength += 1
-    
+
     setPasswordStrength(strength)
   }, [password])
-  
+
   // Clear error after 5 seconds
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
         setError('')
       }, 5000)
-      
+
       return () => clearTimeout(timer)
     }
   }, [error])
-  
+
   const getStrengthColor = () => {
     if (passwordStrength <= 1) return 'bg-red-500'
     if (passwordStrength <= 3) return 'bg-yellow-500'
     return 'bg-green-500'
   }
-  
+
   const getStrengthText = () => {
     if (!password) return ''
     if (passwordStrength <= 1) return 'Weak'
     if (passwordStrength <= 3) return 'Medium'
     return 'Strong'
   }
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
-    
+
     // Validate password match
     if (password !== confirmPassword) {
       return setError('Passwords do not match')
     }
-    
+
     // Validate password strength
     if (password.length < 6) {
       return setError('Password must be at least 6 characters')
     }
-    
+
     setLoading(true)
-    
+
     try {
       const { success, error } = await signUp(email, password)
-      
+
       if (success) {
         navigate('/login')
       } else {
@@ -119,11 +119,11 @@ const Register = () => {
       setLoading(false)
     }
   }
-  
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <motion.div 
+        <motion.div
           className="text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -137,7 +137,7 @@ const Register = () => {
           >
             <i className="bi bi-rocket-takeoff text-3xl"></i>
           </motion.div>
-          <motion.h1 
+          <motion.h1
             className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-700"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -145,7 +145,7 @@ const Register = () => {
           >
             Begin Your Cosmic Journey
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="text-neutral-600"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -154,15 +154,15 @@ const Register = () => {
             Create your account to start exploring the universe of knowledge
           </motion.p>
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {error && (
-            <motion.div 
+            <motion.div
               className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg flex items-start"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -176,7 +176,7 @@ const Register = () => {
               </div>
             </motion.div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div variants={itemVariants}>
               <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
@@ -197,7 +197,7 @@ const Register = () => {
                 />
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants}>
               <label htmlFor="password" className="block text-sm font-medium text-neutral-700 mb-1">
                 Password
@@ -215,20 +215,20 @@ const Register = () => {
                   className="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 outline-none"
                   placeholder="••••••••"
                 />
-                <div 
+                <div
                   className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   <i className={`bi ${showPassword ? 'bi-eye-slash' : 'bi-eye'} text-gray-400 hover:text-gray-600 transition-colors`}></i>
                 </div>
               </div>
-              
+
               {password && (
                 <div className="mt-2">
                   <div className="flex items-center justify-between mb-1">
                     <div className="w-full bg-gray-200 rounded-full h-2.5">
-                      <div 
-                        className={`h-2.5 rounded-full ${getStrengthColor()}`} 
+                      <div
+                        className={`h-2.5 rounded-full ${getStrengthColor()}`}
                         style={{ width: `${(passwordStrength / 5) * 100}%` }}
                       ></div>
                     </div>
@@ -255,7 +255,7 @@ const Register = () => {
                 </div>
               )}
             </motion.div>
-            
+
             <motion.div variants={itemVariants}>
               <label htmlFor="confirmPassword" className="block text-sm font-medium text-neutral-700 mb-1">
                 Confirm Password
@@ -273,14 +273,14 @@ const Register = () => {
                   className="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 outline-none"
                   placeholder="••••••••"
                 />
-                <div 
+                <div
                   className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   <i className={`bi ${showConfirmPassword ? 'bi-eye-slash' : 'bi-eye'} text-gray-400 hover:text-gray-600 transition-colors`}></i>
                 </div>
               </div>
-              
+
               {confirmPassword && (
                 <div className="mt-2 flex items-center">
                   {password === confirmPassword ? (
@@ -297,7 +297,7 @@ const Register = () => {
                 </div>
               )}
             </motion.div>
-            
+
             <motion.div variants={itemVariants} className="text-sm text-neutral-600 bg-gray-50 p-4 rounded-lg border border-gray-200">
               <p className="font-medium mb-2">By creating an account, you agree to our:</p>
               <ul className="space-y-1">
@@ -315,7 +315,7 @@ const Register = () => {
                 </li>
               </ul>
             </motion.div>
-            
+
             <motion.div variants={itemVariants}>
               <motion.button
                 type="submit"
@@ -333,48 +333,13 @@ const Register = () => {
               </motion.button>
             </motion.div>
           </form>
-          
-          <motion.div 
+
+          <motion.div
             className="mt-8 text-center"
             variants={itemVariants}
           >
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-4 bg-white text-sm text-gray-500">Or sign up with</span>
-              </div>
-            </div>
-            
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              <motion.button
-                type="button"
-                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <i className="bi bi-google text-red-500 text-lg"></i>
-              </motion.button>
-              <motion.button
-                type="button"
-                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <i className="bi bi-facebook text-blue-600 text-lg"></i>
-              </motion.button>
-              <motion.button
-                type="button"
-                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <i className="bi bi-github text-gray-800 text-lg"></i>
-              </motion.button>
-            </div>
-            
-            <motion.p 
+
+            <motion.p
               className="mt-6 text-neutral-600"
               variants={itemVariants}
             >

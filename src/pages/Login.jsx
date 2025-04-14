@@ -11,37 +11,37 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false)
   const { signIn } = useAuth()
   const navigate = useNavigate()
-  
+
   // Animation variants
   const containerVariants = {
     hidden: { opacity: 0 },
-    visible: { 
+    visible: {
       opacity: 1,
-      transition: { 
+      transition: {
         when: "beforeChildren",
         staggerChildren: 0.1,
         duration: 0.3
       }
     }
   }
-  
+
   const itemVariants = {
     hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
+    visible: {
+      y: 0,
       opacity: 1,
       transition: { duration: 0.5 }
     }
   }
-  
+
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
     setLoading(true)
-    
+
     try {
       const { success, error } = await signIn(email, password)
-      
+
       if (success) {
         navigate('/dashboard')
       } else {
@@ -54,22 +54,22 @@ const Login = () => {
       setLoading(false)
     }
   }
-  
+
   // Clear error after 5 seconds
   useEffect(() => {
     if (error) {
       const timer = setTimeout(() => {
         setError('')
       }, 5000)
-      
+
       return () => clearTimeout(timer)
     }
   }, [error])
-  
+
   return (
     <div className="min-h-[80vh] flex items-center justify-center px-4 py-12">
       <div className="w-full max-w-md">
-        <motion.div 
+        <motion.div
           className="text-center mb-8"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -83,7 +83,7 @@ const Login = () => {
           >
             <i className="bi bi-stars text-3xl"></i>
           </motion.div>
-          <motion.h1 
+          <motion.h1
             className="text-4xl font-bold mb-2 bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-700"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -91,7 +91,7 @@ const Login = () => {
           >
             Welcome Back
           </motion.h1>
-          <motion.p 
+          <motion.p
             className="text-neutral-600"
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -100,15 +100,15 @@ const Login = () => {
             Sign in to continue exploring your cosmic universe
           </motion.p>
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           className="bg-white rounded-2xl shadow-xl p-8 border border-gray-100"
           variants={containerVariants}
           initial="hidden"
           animate="visible"
         >
           {error && (
-            <motion.div 
+            <motion.div
               className="mb-6 p-4 bg-red-50 border-l-4 border-red-500 text-red-700 rounded-lg flex items-start"
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -122,7 +122,7 @@ const Login = () => {
               </div>
             </motion.div>
           )}
-          
+
           <form onSubmit={handleSubmit} className="space-y-6">
             <motion.div variants={itemVariants}>
               <label htmlFor="email" className="block text-sm font-medium text-neutral-700 mb-1">
@@ -143,7 +143,7 @@ const Login = () => {
                 />
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants}>
               <div className="flex justify-between items-center mb-1">
                 <label htmlFor="password" className="block text-sm font-medium text-neutral-700">
@@ -166,7 +166,7 @@ const Login = () => {
                   className="pl-10 w-full px-4 py-3 rounded-lg border border-gray-300 focus:ring-2 focus:ring-purple-500 focus:border-purple-500 transition-all duration-200 outline-none"
                   placeholder="••••••••"
                 />
-                <div 
+                <div
                   className="absolute inset-y-0 right-0 pr-3 flex items-center cursor-pointer"
                   onClick={() => setShowPassword(!showPassword)}
                 >
@@ -174,7 +174,7 @@ const Login = () => {
                 </div>
               </div>
             </motion.div>
-            
+
             <motion.div variants={itemVariants}>
               <motion.button
                 type="submit"
@@ -192,48 +192,13 @@ const Login = () => {
               </motion.button>
             </motion.div>
           </form>
-          
-          <motion.div 
+
+          <motion.div
             className="mt-8 text-center"
             variants={itemVariants}
           >
-            <div className="relative">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-200"></div>
-              </div>
-              <div className="relative flex justify-center">
-                <span className="px-4 bg-white text-sm text-gray-500">Or continue with</span>
-              </div>
-            </div>
-            
-            <div className="mt-4 grid grid-cols-3 gap-3">
-              <motion.button
-                type="button"
-                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <i className="bi bi-google text-red-500 text-lg"></i>
-              </motion.button>
-              <motion.button
-                type="button"
-                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <i className="bi bi-facebook text-blue-600 text-lg"></i>
-              </motion.button>
-              <motion.button
-                type="button"
-                className="py-2 px-4 bg-white border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors duration-200 flex items-center justify-center"
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-              >
-                <i className="bi bi-github text-gray-800 text-lg"></i>
-              </motion.button>
-            </div>
-            
-            <motion.p 
+
+            <motion.p
               className="mt-6 text-neutral-600"
               variants={itemVariants}
             >
@@ -250,8 +215,8 @@ const Login = () => {
             </motion.p>
           </motion.div>
         </motion.div>
-        
-        <motion.div 
+
+        <motion.div
           className="mt-8 text-center text-sm text-gray-500"
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}

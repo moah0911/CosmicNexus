@@ -45,7 +45,13 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      const { error } = await supabase.auth.signUp({ email, password })
+      const { error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: 'https://cosmicnexus.onrender.com/login'
+        }
+      })
       if (error) throw error
       toast.success('Registration successful! Please check your email for verification.')
       return { success: true }
@@ -82,7 +88,7 @@ export function AuthProvider({ children }) {
   const resetPassword = async (email) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: 'https://cosmicnexus.onrender.com/reset-password',
       })
       if (error) throw error
       toast.success('Password reset email sent')
