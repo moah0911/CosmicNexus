@@ -46,8 +46,10 @@ const SimpleMouseTrail = () => {
 
       // Add new particles on mouse move, but only if there's significant movement
       const velocity = Math.sqrt(Math.pow(mouseX - (prevMouseX || mouseX), 2) + Math.pow(mouseY - (prevMouseY || mouseY), 2));
-      if (velocity > 3) { // Only add particles when there's significant movement
-        addParticles(mouseX, mouseY, 2); // Add 2 particles per significant move
+      if (velocity > 2) { // Lower threshold for more consistent trail
+        // Add more particles for faster movements
+        const particleCount = velocity > 10 ? 3 : 2;
+        addParticles(mouseX, mouseY, particleCount);
       }
 
       // Store previous position
@@ -67,7 +69,7 @@ const SimpleMouseTrail = () => {
         this.speedY = (Math.random() - 0.5) * 2;
         this.color = getRandomColor();
         this.life = 40; // Moderate lifespan
-        this.isStar = Math.random() > 0.3; // 70% chance to be a star
+        this.isStar = Math.random() > 0.4; // 60% chance to be a star for better balance
       }
 
       update() {
@@ -80,16 +82,46 @@ const SimpleMouseTrail = () => {
 
       draw() {
         // Fade out gradually
-        const opacity = Math.min(0.8, this.life / 40); // Lower max opacity for subtlety
+        const opacity = Math.min(0.7, this.life / 40); // Lower max opacity for subtlety
         ctx.globalAlpha = opacity;
 
         // Add subtle glow effect for all particles
-        ctx.shadowBlur = 10;
+        ctx.shadowBlur = 8;
         ctx.shadowColor = this.color;
 
         if (this.isStar) {
-          drawStar(ctx, this.x, this.y, 5, this.size, this.size/2, this.color);
+          // Make stars slightly smaller for cosmic feel
+          const starSize = this.size * 0.9;
+          drawStar(ctx, this.x, this.y, 5, starSize, starSize/2, this.color);
+
+          // Add a subtle pulse effect to stars
+          const pulseAmount = Math.sin(this.life * 0.2) * 0.2;
+          const pulseGradient = ctx.createRadialGradient(
+            this.x, this.y, 0,
+            this.x, this.y, starSize * (2 + pulseAmount)
+          );
+          // Handle both hex and rgba color formats
+          let pulseColor;
+          if (this.color.startsWith('#')) {
+            // Convert hex to rgba
+            const hex = this.color.slice(1);
+            const r = parseInt(hex.slice(0, 2), 16);
+            const g = parseInt(hex.slice(2, 4), 16);
+            const b = parseInt(hex.slice(4, 6), 16);
+            pulseColor = `rgba(${r}, ${g}, ${b}, 0.1)`;
+          } else {
+            // Already rgba format
+            pulseColor = this.color.replace(')', ', 0.1)');
+          }
+          pulseGradient.addColorStop(0, pulseColor);
+          pulseGradient.addColorStop(1, 'rgba(0,0,0,0)');
+
+          ctx.beginPath();
+          ctx.arc(this.x, this.y, starSize * (2 + pulseAmount), 0, Math.PI * 2);
+          ctx.fillStyle = pulseGradient;
+          ctx.fill();
         } else {
+          // Draw a circle with subtle glow
           ctx.beginPath();
           ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
           ctx.fillStyle = this.color;
@@ -98,13 +130,13 @@ const SimpleMouseTrail = () => {
           // Add subtle glow for circles
           const gradient = ctx.createRadialGradient(
             this.x, this.y, 0,
-            this.x, this.y, this.size * 2
+            this.x, this.y, this.size * 1.8
           );
           gradient.addColorStop(0, this.color);
           gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
           ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y, this.size * 1.8, 0, Math.PI * 2);
           ctx.fillStyle = gradient;
           ctx.fill();
         }
@@ -135,26 +167,59 @@ const SimpleMouseTrail = () => {
 
       ctx.lineTo(cx, cy - outerRadius);
       ctx.closePath();
-      ctx.fillStyle = color;
+
+      // Create a subtle gradient fill for the star
+      const starGradient = ctx.createRadialGradient(
+        cx, cy, innerRadius * 0.5,
+        cx, cy, outerRadius
+      );
+
+      // Extract RGB components from the color hex
+      let r, g, b;
+      if (color.startsWith('#')) {
+        const hex = color.slice(1);
+        r = parseInt(hex.slice(0, 2), 16);
+        g = parseInt(hex.slice(2, 4), 16);
+        b = parseInt(hex.slice(4, 6), 16);
+      } else {
+        // Default fallback
+        r = 147; g = 51; b = 234; // Purple
+      }
+
+      starGradient.addColorStop(0, `rgba(${r}, ${g}, ${b}, 0.9)`);
+      starGradient.addColorStop(1, `rgba(${r}, ${g}, ${b}, 0.7)`);
+
+      ctx.fillStyle = starGradient;
       ctx.fill();
 
       // Add glow effect
-      ctx.shadowBlur = 15;
+      ctx.shadowBlur = 10;
       ctx.shadowColor = color;
     }
 
-    // Get random color from cosmic palette
+    // Get random color from cosmic palette - more purples and indigos to match UI
     function getRandomColor() {
+      // Weighted color palette that favors purples and indigos
       const colors = [
+        // Primary colors - higher probability (duplicated for higher chance)
         '#9333EA', // purple-600
+        '#9333EA', // purple-600 (duplicated)
         '#8B5CF6', // violet-500
+        '#8B5CF6', // violet-500 (duplicated)
         '#A855F7', // purple-500
+        '#A855F7', // purple-500 (duplicated)
         '#C084FC', // purple-400
         '#6366F1', // indigo-500
+        '#6366F1', // indigo-500 (duplicated)
         '#818CF8', // indigo-400
-        '#EC4899', // pink-500
-        '#F472B6', // pink-400
-        '#3B82F6', // blue-500
+        '#818CF8', // indigo-400 (duplicated)
+
+        // Accent colors - lower probability
+        '#7E22CE', // purple-700
+        '#4F46E5', // indigo-600
+        '#4338CA', // indigo-700
+        '#7C3AED', // violet-600
+        '#6D28D9', // violet-700
       ];
       return colors[Math.floor(Math.random() * colors.length)];
     }
@@ -169,8 +234,8 @@ const SimpleMouseTrail = () => {
       }
 
       // Limit particles for performance and subtlety
-      if (particles.length > 80) {
-        particles = particles.slice(-80);
+      if (particles.length > 60) {
+        particles = particles.slice(-60);
       }
     }
 
