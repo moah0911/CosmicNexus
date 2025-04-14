@@ -188,6 +188,17 @@ const VerifyOTP = () => {
               through interactive graph visualizations.
             </p>
           </motion.div>
+
+          {/* For development/testing only - shows the OTP in the console */}
+          {process.env.NODE_ENV === 'development' && (
+            <motion.div
+              className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm"
+              variants={itemVariants}
+            >
+              <p className="font-medium">Developer Mode</p>
+              <p>Check the browser console to see the simulated email with the OTP code.</p>
+            </motion.div>
+          )}
         </div>
       </motion.div>
     </div>

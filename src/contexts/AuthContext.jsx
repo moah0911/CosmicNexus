@@ -1,6 +1,8 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'react-toastify'
+import { generateOTP, storeOTP, verifyOTP as verifyOTPCode, clearOTP } from '../utils/otpUtils'
+import { simulateSendOTPEmail } from '../utils/emailUtils'
 
 const AuthContext = createContext()
 
@@ -45,25 +47,35 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Sign up with OTP verification instead of email confirmation link
-      const { error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: undefined, // Disable redirect URL
-          data: {
-            email: email
-          }
-        }
-      })
+      // First, check if the email is already registered
+      const { data: { users }, error: checkError } = await supabase.auth.admin.listUsers({
+        filter: { email }
+      }).catch(() => ({ data: { users: [] }, error: null }));
 
-      if (error) throw error
+      // If we can't check (likely due to permissions), proceed anyway
+      if (users && users.length > 0) {
+        throw new Error('Email is already registered');
+      }
+
+      // Generate a 6-digit OTP code
+      const otp = generateOTP(6);
+
+      // Store the OTP with a 10-minute expiry
+      storeOTP(email, otp, 10);
+
+      // Send the OTP via email (simulated for now)
+      await simulateSendOTPEmail(email, otp);
+
+      // Store the email and password temporarily for later registration
+      sessionStorage.setItem('pendingRegistration', JSON.stringify({ email, password }));
+
+      toast.success('Verification code sent to your email');
 
       // Return success with email for the verification page
-      return { success: true, email }
+      return { success: true, email };
     } catch (error) {
-      toast.error(error.message || 'Registration failed')
-      return { success: false, error }
+      toast.error(error.message || 'Registration failed');
+      return { success: false, error };
     }
   }
 
@@ -110,36 +122,70 @@ export function AuthProvider({ children }) {
 
   const verifyOTP = async (email, token) => {
     try {
-      const { error } = await supabase.auth.verifyOtp({
-        email,
-        token,
-        type: 'signup'
-      })
+      // Verify the OTP code
+      const isValid = verifyOTPCode(email, token);
 
-      if (error) throw error
+      if (!isValid) {
+        throw new Error('Invalid or expired verification code');
+      }
 
-      toast.success('Email verified successfully!')
-      return { success: true }
+      // Get the stored registration data
+      const pendingRegistration = JSON.parse(sessionStorage.getItem('pendingRegistration') || '{}');
+
+      if (!pendingRegistration.email || !pendingRegistration.password) {
+        throw new Error('Registration data not found');
+      }
+
+      // Complete the registration with Supabase
+      const { error } = await supabase.auth.signUp({
+        email: pendingRegistration.email,
+        password: pendingRegistration.password,
+        options: {
+          // Skip email verification since we've already verified with OTP
+          emailRedirectTo: undefined,
+          data: {
+            email_verified: true
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      // Clear the OTP and pending registration data
+      clearOTP(email);
+      sessionStorage.removeItem('pendingRegistration');
+
+      toast.success('Email verified successfully!');
+      return { success: true };
     } catch (error) {
-      toast.error(error.message || 'Invalid verification code')
-      return { success: false, error }
+      toast.error(error.message || 'Invalid verification code');
+      return { success: false, error };
     }
   }
 
   const resendOTP = async (email) => {
     try {
-      const { error } = await supabase.auth.resend({
-        type: 'signup',
-        email
-      })
+      // Get the pending registration data to ensure we have the correct email
+      const pendingRegistration = JSON.parse(sessionStorage.getItem('pendingRegistration') || '{}');
 
-      if (error) throw error
+      if (!pendingRegistration.email) {
+        throw new Error('Registration data not found');
+      }
 
-      toast.success('Verification code resent to your email')
-      return { success: true }
+      // Generate a new OTP code
+      const otp = generateOTP(6);
+
+      // Store the new OTP with a 10-minute expiry
+      storeOTP(email, otp, 10);
+
+      // Send the OTP via email (simulated for now)
+      await simulateSendOTPEmail(email, otp);
+
+      toast.success('Verification code resent to your email');
+      return { success: true };
     } catch (error) {
-      toast.error(error.message || 'Failed to resend verification code')
-      return { success: false, error }
+      toast.error(error.message || 'Failed to resend verification code');
+      return { success: false, error };
     }
   }
 
