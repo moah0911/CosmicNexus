@@ -99,13 +99,14 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             >
             <motion.div
               ref={modalRef}
-              className="bg-white/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative my-10 text-neutral-800"
+              className="bg-black/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative my-10 text-purple-200"
               style={{
                 boxShadow: '0 10px 50px rgba(124, 58, 237, 0.5)',
                 WebkitOverflowScrolling: 'touch', // Improve scrolling on iOS
                 msOverflowStyle: 'none', // Hide scrollbars in IE/Edge
                 scrollbarWidth: 'thin', // Thin scrollbars in Firefox
-                border: '1px solid rgba(139, 92, 246, 0.3)'
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                backgroundImage: 'radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.1), transparent 70%)'
               }}
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -122,16 +123,16 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               <div className="absolute -top-3 -left-3 w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/10 to-indigo-500/10 z-0"></div>
               <div className="absolute -bottom-3 -right-3 w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 z-0"></div>
 
-              <div className="sticky top-0 z-10 flex justify-between items-center p-5 border-b border-purple-200/30 bg-white/95 backdrop-blur-md">
+              <div className="sticky top-0 z-10 flex justify-between items-center p-5 border-b border-purple-800/30 bg-black/95 backdrop-blur-md">
                 <div className="flex items-center">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600/30 to-indigo-600/30 flex items-center justify-center mr-3 shadow-md">
-                    <i className="bi bi-stars text-purple-600"></i>
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600/20 to-indigo-600/20 flex items-center justify-center mr-3 shadow-md border border-purple-700/30">
+                    <i className="bi bi-stars text-purple-400"></i>
                   </div>
-                  <h2 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-600 to-indigo-600">{title}</h2>
+                  <h2 className="text-2xl font-bold text-purple-200">{title}</h2>
                 </div>
                 <button
                   onClick={onClose}
-                  className="text-purple-500 hover:text-purple-700 w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-100/30 transition-all duration-300 transform hover:rotate-90"
+                  className="text-purple-400 hover:text-purple-300 w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-all duration-300 transform hover:rotate-90"
                   aria-label="Close modal"
                 >
                   <i className="bi bi-x-lg text-xl"></i>
