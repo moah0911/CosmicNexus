@@ -62,7 +62,7 @@ const Navbar = () => {
                 <Link to="/map" className={`${isActive('/map')} transition-colors duration-200 relative group`}>
                   <span>Cosmic Explorer</span>
                 </Link>
-                <Link to="/insights" className={`${isActive('/insights')} transition-colors duration-200`}>Cosmic Insights</Link>
+                <Link to="/insights-landing" className={`${isActive('/insights-landing')} transition-colors duration-200`}>Cosmic Insights</Link>
                 <Link to="/connections" className={`${isActive('/connections')} transition-colors duration-200`}>Connections</Link>
                 <div className="relative group">
                   <button className="flex items-center space-x-1 text-purple-200 hover:text-purple-400">
@@ -138,8 +138,8 @@ const Navbar = () => {
                     <span>Cosmic Explorer</span>
                   </Link>
                   <Link
-                    to="/insights"
-                    className={`${isActive('/insights')} px-2 py-1 rounded-md flex items-center`}
+                    to="/insights-landing"
+                    className={`${isActive('/insights-landing')} px-2 py-1 rounded-md flex items-center`}
                     onClick={() => setIsMenuOpen(false)}
                   >
                     <span>Cosmic Insights</span>

@@ -10,6 +10,7 @@ import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import CosmicExplorer from './pages/CosmicExplorer'
 import CosmicInsights from './pages/CosmicInsights'
+import InsightsLanding from './pages/InsightsLanding'
 import AuthRedirectHandler from './components/AuthRedirectHandler'
 import AuthCallback from './pages/AuthCallback'
 import RegistrationSuccess from './pages/RegistrationSuccess'
@@ -72,6 +73,7 @@ function App() {
           {/* Protected Routes */}
           <Route path="dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="map" element={user ? <CosmicExplorer /> : <Navigate to="/login" />} />
+          <Route path="insights-landing" element={user ? <InsightsLanding /> : <Navigate to="/login" />} />
           <Route path="insights" element={user ? <CosmicInsights /> : <Navigate to="/login" />} />
           <Route path="connections" element={user ? <Connections /> : <Navigate to="/login" />} />
           <Route path="profile" element={user ? <Profile /> : <Navigate to="/login" />} />
