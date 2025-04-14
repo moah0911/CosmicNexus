@@ -8,10 +8,10 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
     description: '',
     notes: ''
   })
-  
+
   const [formErrors, setFormErrors] = useState({})
   const [isSubmitting, setIsSubmitting] = useState(false)
-  
+
   // Define categories
   const categories = [
     { value: 'art', label: 'Art & Design', icon: 'bi-palette', color: 'bg-rose-500', gradient: 'from-rose-500 to-pink-500' },
@@ -24,7 +24,7 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
     { value: 'hobby', label: 'Hobby', icon: 'bi-controller', color: 'bg-pink-500', gradient: 'from-pink-500 to-rose-500' },
     { value: 'general', label: 'General', icon: 'bi-tag', color: 'bg-gray-500', gradient: 'from-gray-500 to-slate-500' }
   ]
-  
+
   // Reset form when node changes
   useEffect(() => {
     if (node) {
@@ -47,51 +47,51 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
       setFormErrors({})
     }
   }, [node])
-  
+
   // Handle form field changes
   const handleChange = useCallback((e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
-    
+
     // Clear error when field is edited
     if (formErrors[name]) {
       setFormErrors(prev => ({ ...prev, [name]: null }))
     }
   }, [formErrors])
-  
+
   // Handle category selection
   const handleCategorySelect = useCallback((categoryValue) => {
     setFormData(prev => ({ ...prev, category: categoryValue }))
   }, [])
-  
+
   // Validate form fields
   const validateForm = useCallback(() => {
     const errors = {}
-    
+
     if (!formData.title.trim()) {
       errors.title = "Title is required"
     } else if (formData.title.length > 50) {
       errors.title = "Title must be less than 50 characters"
     }
-    
+
     if (!formData.description.trim()) {
       errors.description = "Description is required"
     }
-    
+
     setFormErrors(errors)
     return Object.keys(errors).length === 0
   }, [formData])
-  
+
   // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault()
-    
+
     if (!validateForm()) {
       return
     }
-    
+
     setIsSubmitting(true)
-    
+
     try {
       // Prepare clean data for submission
       const cleanData = {
@@ -100,42 +100,42 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
         description: formData.description.trim(),
         notes: formData.notes.trim()
       }
-      
+
       await onSubmit(cleanData)
     } catch (error) {
       console.error("Error submitting form:", error)
       setIsSubmitting(false)
     }
   }
-  
+
   // Helper functions for category styling
   const getCategoryColor = useCallback((categoryValue) => {
     const category = categories.find(c => c.value === categoryValue)
     return category ? category.color : 'bg-gray-500'
   }, [categories])
-  
+
   const getCategoryGradient = useCallback((categoryValue) => {
     const category = categories.find(c => c.value === categoryValue)
     return category ? category.gradient : 'from-gray-500 to-slate-500'
   }, [categories])
-  
+
   return (
-    <form 
-      onSubmit={handleSubmit} 
-      className="space-y-6 bg-gradient-to-br from-purple-50/50 to-indigo-50/50 p-6 rounded-2xl shadow-inner"
+    <form
+      onSubmit={handleSubmit}
+      className="space-y-6 bg-gradient-to-br from-purple-900/80 to-indigo-900/80 p-6 rounded-2xl shadow-inner"
     >
       <div className="text-center mb-6">
-        <h3 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-700 to-indigo-700">
+        <h3 className="text-2xl font-bold text-white">
           {node ? 'Update Cosmic Node' : 'Create New Cosmic Node'}
         </h3>
-        <p className="text-neutral-600 mt-2">
+        <p className="text-purple-200 mt-2">
           {node ? 'Refine your cosmic knowledge node' : 'Add a new star to your cosmic universe'}
         </p>
       </div>
-      
+
       <div>
-        <label htmlFor="title" className="block text-base font-medium text-neutral-800 mb-2">
-          Node Title <span className="text-rose-500">*</span>
+        <label htmlFor="title" className="block text-base font-medium text-white mb-2">
+          Node Title <span className="text-rose-400">*</span>
         </label>
         <div className="relative">
           <input
@@ -145,7 +145,7 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
             value={formData.title}
             onChange={handleChange}
             autoComplete="off"
-            className={`w-full px-5 py-3 pl-12 rounded-xl border-2 ${formErrors.title ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'} bg-white/70 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300`}
+            className={`w-full px-5 py-3 pl-12 rounded-xl border-2 ${formErrors.title ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-purple-500 focus:border-purple-400 focus:ring-purple-400'} bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300`}
             placeholder="e.g., Quantum Physics, Renaissance Art, Jazz Music"
           />
           <div className="absolute left-3 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
@@ -158,30 +158,30 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
           </p>
         )}
       </div>
-      
+
       <div>
-        <label htmlFor="category" className="block text-base font-medium text-neutral-800 mb-2">
+        <label htmlFor="category" className="block text-base font-medium text-white mb-2">
           Knowledge Category
         </label>
         <div className="grid grid-cols-3 gap-3 mb-2">
           {categories.map(category => (
-            <div 
+            <div
               key={category.value}
               onClick={() => handleCategorySelect(category.value)}
               className={`flex flex-col items-center p-3 rounded-xl cursor-pointer border-2 transition-all duration-200 ${
-                formData.category === category.value 
-                  ? 'border-purple-500 bg-white shadow-md scale-105' 
-                  : 'border-purple-100 hover:border-purple-300 hover:bg-white/80'
+                formData.category === category.value
+                  ? 'border-purple-400 bg-black/80 shadow-md scale-105'
+                  : 'border-purple-700 hover:border-purple-500 hover:bg-black/60'
               }`}
             >
               <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gradient-to-br ${
-                formData.category === category.value 
+                formData.category === category.value
                   ? category.gradient
-                  : 'from-gray-200 to-gray-300'
+                  : 'from-gray-700 to-gray-800'
               } shadow-md`}>
-                <i className={`bi ${category.icon} ${formData.category === category.value ? 'text-white' : 'text-gray-600'} text-lg`}></i>
+                <i className={`bi ${category.icon} ${formData.category === category.value ? 'text-white' : 'text-gray-300'} text-lg`}></i>
               </div>
-              <span className={`text-sm font-medium ${formData.category === category.value ? 'text-purple-700' : 'text-neutral-600'}`}>
+              <span className={`text-sm font-medium ${formData.category === category.value ? 'text-purple-300' : 'text-neutral-300'}`}>
                 {category.label}
               </span>
             </div>
@@ -203,10 +203,10 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
           ))}
         </select>
       </div>
-      
+
       <div>
-        <label htmlFor="description" className="block text-base font-medium text-neutral-800 mb-2">
-          Description <span className="text-rose-500">*</span>
+        <label htmlFor="description" className="block text-base font-medium text-white mb-2">
+          Description <span className="text-rose-400">*</span>
         </label>
         <div className="relative">
           <textarea
@@ -215,7 +215,7 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
             value={formData.description}
             onChange={handleChange}
             rows="3"
-            className={`w-full px-5 py-3 pl-12 rounded-xl border-2 ${formErrors.description ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-purple-200 focus:border-purple-500 focus:ring-purple-500'} bg-white/70 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300`}
+            className={`w-full px-5 py-3 pl-12 rounded-xl border-2 ${formErrors.description ? 'border-rose-500 focus:border-rose-500 focus:ring-rose-500' : 'border-purple-500 focus:border-purple-400 focus:ring-purple-400'} bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300`}
             placeholder="Describe this cosmic node in detail..."
           ></textarea>
           <div className="absolute left-3 top-3 w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
@@ -228,10 +228,10 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
           </p>
         )}
       </div>
-      
+
       <div>
-        <label htmlFor="notes" className="block text-base font-medium text-neutral-800 mb-2">
-          Personal Notes <span className="text-neutral-500 text-sm">(optional)</span>
+        <label htmlFor="notes" className="block text-base font-medium text-white mb-2">
+          Personal Notes <span className="text-neutral-300 text-sm">(optional)</span>
         </label>
         <div className="relative">
           <textarea
@@ -240,7 +240,7 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
             value={formData.notes}
             onChange={handleChange}
             rows="2"
-            className="w-full px-5 py-3 pl-12 rounded-xl border-2 border-purple-200 focus:border-purple-500 focus:ring-purple-500 bg-white/70 backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
+            className="w-full px-5 py-3 pl-12 rounded-xl border-2 border-purple-500 focus:border-purple-400 focus:ring-purple-400 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
             placeholder="Add your personal thoughts or context..."
           ></textarea>
           <div className="absolute left-3 top-3 w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
@@ -248,12 +248,12 @@ const InterestNodeForm = ({ node, onSubmit, onCancel }) => {
           </div>
         </div>
       </div>
-      
+
       <div className="flex justify-end space-x-4 pt-4">
         <button
           type="button"
           onClick={onCancel}
-          className="px-6 py-3 rounded-xl border-2 border-purple-300 text-purple-700 hover:bg-purple-50 transition-all duration-300"
+          className="px-6 py-3 rounded-xl border-2 border-purple-600 text-purple-300 hover:bg-purple-900/30 transition-all duration-300"
           disabled={isSubmitting}
         >
           <i className="bi bi-x-circle mr-2"></i> Cancel

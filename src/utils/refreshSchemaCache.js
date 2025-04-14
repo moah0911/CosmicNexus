@@ -12,18 +12,19 @@ export const refreshSchemaCache = async () => {
         // This RPC might not exist, which is fine
         // The attempt itself should trigger a schema refresh
       })
-    
+
     // Alternative approach: query the table structure directly
     const { error } = await supabase
       .from('connections')
-      .select('id, is_manual')
+      .select('id, is_manual, relationship_type')
       .limit(1)
-    
-    if (error && error.message.includes('column "is_manual" does not exist')) {
+
+    if (error && (error.message.includes('column "is_manual" does not exist') ||
+                 error.message.includes('column "relationship_type" does not exist'))) {
       console.error('Schema cache refresh failed:', error)
       return false
     }
-    
+
     return true
   } catch (error) {
     console.error('Error refreshing schema cache:', error)
