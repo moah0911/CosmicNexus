@@ -86,8 +86,8 @@ const ConnectionCard = ({ connection, sourceNode, targetNode, onDelete }) => {
           </div>
           
           <div className="flex items-center justify-center px-3 py-1 rounded-full bg-black/60 shadow-sm border border-purple-700/30">
-            <i className={`bi bi-${getRelationshipIcon(connection.relationship_type)} text-purple-400 mr-1`}></i>
-            <span className="text-xs text-purple-300 capitalize">{formatRelationshipType(connection.relationship_type)}</span>
+            <i className={`bi bi-${getRelationshipIcon(connection.relationship_type || 'related')} text-purple-400 mr-1`}></i>
+            <span className="text-xs text-purple-300 capitalize">{formatRelationshipType(connection.relationship_type || 'related')}</span>
           </div>
           
           <div className="flex items-center">

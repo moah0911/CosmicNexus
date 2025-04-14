@@ -294,7 +294,7 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
 
     // Check if this is a manual connection creation
     if (options.manualDescription && selectedNodeIds.length === 2) {
-      // Create a single manual connection without the is_manual field
+      // Create a single manual connection without the relationship_type field
       // to avoid schema cache issues
       const connectionData = {
         id: uuidv4(),
@@ -302,12 +302,11 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
         source_node_id: selectedNodeIds[0],
         target_node_id: selectedNodeIds[1],
         description: options.manualDescription,
-        strength: options.strength || 3,
-        relationship_type: options.relationshipType || 'related'
-        // Intentionally omitting is_manual
+        strength: options.strength || 3
+        // Intentionally omitting relationship_type to avoid schema cache issues
       };
 
-      console.log("generateConnections: Creating manual connection with relationship type:", options.relationshipType);
+      console.log("generateConnections: Creating manual connection with strength:", options.strength);
 
       try {
         const { error: insertError } = await supabase
@@ -323,10 +322,12 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
         throw insertError;
       }
 
-      // Add is_manual for the client-side representation
+      // Add is_manual and relationship_type for the client-side representation only
       const manualConnection = {
         ...connectionData,
-        is_manual: true
+        is_manual: true,
+        relationship_type: options.relationshipType || 'related',
+        created_at: new Date().toISOString()
       };
 
       return { success: true, connections: [manualConnection] };

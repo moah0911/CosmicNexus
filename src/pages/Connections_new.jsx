@@ -4,7 +4,7 @@ import { toast } from 'react-toastify'
 import { fetchInterestNodes, fetchConnections, generateConnections, fetchDiscoveryPrompts, deleteConnection } from '../services/interestService'
 import ConnectionCard from '../components/ConnectionCard_new'
 import DiscoveryPrompt from '../components/DiscoveryPrompt'
-import ConnectionCreator from '../components/ConnectionCreator_new'
+import ConnectionCreator from '../components/ConnectionCreator_fixed'
 import Modal from '../components/Modal'
 import { ensureRelationshipTypeColumn } from '../utils/ensureRelationshipTypeColumn'
 
