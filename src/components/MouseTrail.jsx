@@ -19,8 +19,8 @@ const MouseTrail = () => {
 
     // Enhanced cosmic mouse trail effect
     const particles = []
-    const particleCount = 25 // Increased for more vibrant effect
-    const particleLifespan = 30 // Increased for longer trails
+    const particleCount = 40 // Significantly increased for more visible effect
+    const particleLifespan = 40 // Increased for longer trails
 
     let mouseX = 0
     let mouseY = 0
@@ -38,15 +38,15 @@ const MouseTrail = () => {
       constructor(x, y, size, color, speedX, speedY) {
         this.x = x
         this.y = y
-        this.size = size
+        this.size = size * 1.5 // Make particles 50% larger
         this.color = color
         this.speedX = speedX
         this.speedY = speedY
         this.life = particleLifespan
         this.opacity = 1
         this.rotation = Math.random() * Math.PI * 2
-        this.rotationSpeed = (Math.random() - 0.5) * 0.2
-        this.shape = Math.random() > 0.5 ? 'star' : 'circle' // More star shapes for cosmic effect
+        this.rotationSpeed = (Math.random() - 0.5) * 0.3
+        this.shape = Math.random() > 0.4 ? 'star' : 'circle' // Even more star shapes for cosmic effect
       }
 
       update() {
@@ -55,15 +55,17 @@ const MouseTrail = () => {
         this.life--
         this.rotation += this.rotationSpeed
 
-        // Gradually reduce size and opacity as life decreases
-        this.size = this.size * (this.life / particleLifespan)
+        // Gradually reduce size as life decreases, but not as quickly
+        this.size = this.size * (0.3 + 0.7 * (this.life / particleLifespan))
 
-        // Add pulsing effect to opacity
-        const pulseSpeed = 0.1
-        const pulseAmount = 0.2
+        // Add stronger pulsing effect to opacity
+        const pulseSpeed = 0.15
+        const pulseAmount = 0.3
         const baseFade = this.life / particleLifespan
+        // Keep opacity higher for longer
+        const adjustedFade = Math.pow(baseFade, 0.7) // This makes the fade more gradual
         const pulse = Math.sin(this.life * pulseSpeed) * pulseAmount + 1
-        this.opacity = baseFade * pulse
+        this.opacity = adjustedFade * pulse
       }
 
       draw(ctx) {
@@ -71,30 +73,38 @@ const MouseTrail = () => {
         ctx.translate(this.x, this.y)
         ctx.rotate(this.rotation)
 
+        // Add shadow for all particles
+        ctx.shadowBlur = 15
+        ctx.shadowColor = this.color.replace(')', `, ${this.opacity})`).replace('rgba', 'rgba')
+
         if (this.shape === 'star') {
           // Draw a star
           this.drawStar(ctx, 0, 0, 5, this.size, this.size / 2)
         } else {
-          // Draw a circle with glow
+          // Draw a circle with enhanced glow
           ctx.beginPath()
           ctx.arc(0, 0, this.size, 0, Math.PI * 2)
           ctx.fillStyle = this.color.replace(')', `, ${this.opacity})`).replace('rgba', 'rgba')
           ctx.fill()
 
-          // Add a subtle glow
+          // Add a stronger glow
           const gradient = ctx.createRadialGradient(
             0, 0, 0,
-            0, 0, this.size * 3
+            0, 0, this.size * 4
           )
           gradient.addColorStop(0, this.color.replace(')', `, ${this.opacity})`).replace('rgba', 'rgba'))
+          gradient.addColorStop(0.3, this.color.replace(')', `, ${this.opacity * 0.8})`).replace('rgba', 'rgba'))
+          gradient.addColorStop(0.7, this.color.replace(')', `, ${this.opacity * 0.4})`).replace('rgba', 'rgba'))
           gradient.addColorStop(1, `rgba(0, 0, 0, 0)`)
 
           ctx.beginPath()
-          ctx.arc(0, 0, this.size * 3, 0, Math.PI * 2)
+          ctx.arc(0, 0, this.size * 4, 0, Math.PI * 2)
           ctx.fillStyle = gradient
           ctx.fill()
         }
 
+        // Reset shadow for performance
+        ctx.shadowBlur = 0
         ctx.restore()
       }
 
@@ -105,10 +115,14 @@ const MouseTrail = () => {
         let y = cy
         let step = Math.PI / spikes
 
-        // Add a slight twinkle effect by varying the radius
-        const twinkleAmount = Math.sin(this.life * 0.2) * 0.2 + 1
+        // Add a stronger twinkle effect by varying the radius
+        const twinkleAmount = Math.sin(this.life * 0.3) * 0.3 + 1.1
         const adjustedOuterRadius = outerRadius * twinkleAmount
         const adjustedInnerRadius = innerRadius * twinkleAmount
+
+        // Draw the star with a glow effect
+        ctx.shadowBlur = 15
+        ctx.shadowColor = this.color.replace(')', `, ${this.opacity})`).replace('rgba', 'rgba')
 
         ctx.beginPath()
         ctx.moveTo(cx, cy - adjustedOuterRadius)
@@ -133,16 +147,20 @@ const MouseTrail = () => {
         // Add enhanced glow to stars
         const gradient = ctx.createRadialGradient(
           cx, cy, 0,
-          cx, cy, adjustedOuterRadius * 2.5
+          cx, cy, adjustedOuterRadius * 3.5
         )
-        gradient.addColorStop(0, this.color.replace(')', `, ${this.opacity * 0.8})`).replace('rgba', 'rgba'))
-        gradient.addColorStop(0.5, this.color.replace(')', `, ${this.opacity * 0.4})`).replace('rgba', 'rgba'))
+        gradient.addColorStop(0, this.color.replace(')', `, ${this.opacity})`).replace('rgba', 'rgba'))
+        gradient.addColorStop(0.3, this.color.replace(')', `, ${this.opacity * 0.8})`).replace('rgba', 'rgba'))
+        gradient.addColorStop(0.7, this.color.replace(')', `, ${this.opacity * 0.4})`).replace('rgba', 'rgba'))
         gradient.addColorStop(1, 'rgba(0, 0, 0, 0)')
 
         ctx.beginPath()
-        ctx.arc(cx, cy, adjustedOuterRadius * 2.5, 0, Math.PI * 2)
+        ctx.arc(cx, cy, adjustedOuterRadius * 3.5, 0, Math.PI * 2)
         ctx.fillStyle = gradient
         ctx.fill()
+
+        // Reset shadow for performance
+        ctx.shadowBlur = 0
       }
     }
 
@@ -154,29 +172,29 @@ const MouseTrail = () => {
       const velocityY = mouseY - prevMouseY
       const velocity = Math.sqrt(velocityX * velocityX + velocityY * velocityY)
 
-      // Create particles even with subtle mouse movement
-      if (velocity > 1) {
+      // Create particles with any mouse movement
+      if (velocity > 0.5) {
         // Create new particles
-        for (let i = 0; i < 3; i++) { // Increased particle generation
-          const size = Math.random() * 4 + 1.5 // Slightly larger particles
-          const speedX = (Math.random() - 0.5) * 2.5 // More varied speeds
-          const speedY = (Math.random() - 0.5) * 2.5
+        for (let i = 0; i < 5; i++) { // Significantly increased particle generation
+          const size = Math.random() * 5 + 2 // Larger particles
+          const speedX = (Math.random() - 0.5) * 3 // More varied speeds
+          const speedY = (Math.random() - 0.5) * 3
 
-          // Vibrant cosmic color palette with higher opacity
+          // Extremely vibrant cosmic color palette with higher opacity
           const colorOptions = [
-            'rgba(129, 140, 248, 0.7)', // indigo-400
-            'rgba(99, 102, 241, 0.7)',  // indigo-500
-            'rgba(79, 70, 229, 0.7)',   // indigo-600
-            'rgba(167, 139, 250, 0.7)', // purple-400
-            'rgba(139, 92, 246, 0.7)',  // purple-500
-            'rgba(124, 58, 237, 0.7)',  // purple-600
-            'rgba(192, 132, 252, 0.7)', // purple-400
-            'rgba(147, 51, 234, 0.7)',  // purple-600
-            'rgba(59, 130, 246, 0.7)',  // blue-500
-            'rgba(236, 72, 153, 0.7)',  // pink-500 for contrast
-            'rgba(244, 114, 182, 0.7)', // pink-400
-            'rgba(168, 85, 247, 0.7)',  // purple-500
-            'rgba(217, 70, 239, 0.7)'   // fuchsia-600
+            'rgba(129, 140, 248, 0.9)', // indigo-400
+            'rgba(99, 102, 241, 0.9)',  // indigo-500
+            'rgba(79, 70, 229, 0.9)',   // indigo-600
+            'rgba(167, 139, 250, 0.9)', // purple-400
+            'rgba(139, 92, 246, 0.9)',  // purple-500
+            'rgba(124, 58, 237, 0.9)',  // purple-600
+            'rgba(192, 132, 252, 0.9)', // purple-400
+            'rgba(147, 51, 234, 0.9)',  // purple-600
+            'rgba(59, 130, 246, 0.9)',  // blue-500
+            'rgba(236, 72, 153, 0.9)',  // pink-500 for contrast
+            'rgba(244, 114, 182, 0.9)', // pink-400
+            'rgba(168, 85, 247, 0.9)',  // purple-500
+            'rgba(217, 70, 239, 0.9)'   // fuchsia-600
           ];
 
           const color = colorOptions[Math.floor(Math.random() * colorOptions.length)]
@@ -219,8 +237,8 @@ const MouseTrail = () => {
   return (
     <canvas
       ref={canvasRef}
-      className="fixed inset-0 pointer-events-none z-50"
-      style={{ opacity: 0.8 }} // Increased opacity for more vibrant effect
+      className="fixed inset-0 pointer-events-none z-[100]"
+      style={{ opacity: 1 }} // Maximum opacity for maximum visibility
     />
   )
 }
