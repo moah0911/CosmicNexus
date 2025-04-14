@@ -1,10 +1,11 @@
 import { useState, useEffect, useCallback, useMemo } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { fetchInterestNodes, fetchConnections, generateConnections, fetchDiscoveryPrompts, deleteConnection } from '../services/interestService'
+import ConnectionCreator from '../components/ConnectionCreator_fixed'
 import ConnectionCard from '../components/ConnectionCard_new'
 import DiscoveryPrompt from '../components/DiscoveryPrompt'
-import ConnectionCreator from '../components/ConnectionCreator_fixed'
 import Modal from '../components/Modal'
 import { ensureRelationshipTypeColumn } from '../utils/ensureRelationshipTypeColumn'
 
@@ -364,23 +365,23 @@ const Connections = () => {
                 </div>
 
                 <div className="flex flex-col md:flex-row gap-3 mt-4 md:mt-0">
-                  <button
-                    onClick={() => setIsCreateModalOpen(true)}
+                  <Link
+                    to="/create-connection"
                     className="px-6 py-3 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-indigo-600 hover:to-purple-600 cursor-pointer"
                     style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
                   >
                     <i className="bi bi-link-45deg mr-2"></i>
                     <span>Create Manual Connection</span>
-                  </button>
+                  </Link>
 
-                  <button
-                    onClick={() => setIsSelectModalOpen(true)}
+                  <Link
+                    to="/generate-insights"
                     className="px-6 py-3 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
                     style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
                   >
                     <i className="bi bi-stars mr-2"></i>
                     <span>Discover AI Connections</span>
-                  </button>
+                  </Link>
                 </div>
               </div>
 

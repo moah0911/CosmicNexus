@@ -1,19 +1,16 @@
 import { useState, useEffect } from 'react'
 import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { fetchInterestNodes, fetchConnections, fetchDiscoveryPrompts, createInterestNode, deleteInterestNode } from '../services/interestService'
+import { fetchInterestNodes, fetchConnections, fetchDiscoveryPrompts } from '../services/interestService'
 import InterestNode from '../components/InterestNode'
 import ConnectionCard from '../components/ConnectionCard'
 import DiscoveryPrompt from '../components/DiscoveryPrompt'
-import Modal from '../components/Modal'
-import InterestNodeForm from '../components/InterestNodeForm'
 
 const Dashboard = () => {
   const [nodes, setNodes] = useState([])
   const [connections, setConnections] = useState([])
   const [discoveryPrompts, setDiscoveryPrompts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [isModalOpen, setIsModalOpen] = useState(false)
 
   useEffect(() => {
     const loadData = async () => {
@@ -56,43 +53,7 @@ const Dashboard = () => {
     return { sourceNode, targetNode }
   }
 
-  const handleAddInterest = async (nodeData) => {
-    try {
-      // Show loading toast
-      const loadingToastId = toast.loading('Creating your cosmic node...');
-
-      // Call API to create node
-      const { success, data, error, duplicates } = await createInterestNode(nodeData);
-
-      if (success) {
-        setNodes(prev => [data, ...prev]);
-        toast.dismiss(loadingToastId);
-        toast.success('Interest added successfully!');
-        setIsModalOpen(false);
-      } else {
-        toast.dismiss(loadingToastId);
-
-        // Handle duplicate node error specifically
-        if (duplicates && duplicates.length > 0) {
-          const duplicateTitle = duplicates[0].title;
-          toast.error(
-            <div>
-              <p>A node with a similar title already exists:</p>
-              <p className="font-semibold mt-1">"{duplicateTitle}"</p>
-              <p className="text-sm mt-2">Please use a different title.</p>
-            </div>,
-            { autoClose: 5000 }
-          );
-        } else {
-          // Handle other errors
-          toast.error(error?.message || 'Failed to add interest');
-        }
-      }
-    } catch (error) {
-      console.error('Error adding interest:', error);
-      toast.error('An unexpected error occurred');
-    }
-  }
+  // Node creation is now handled in the CreateNode page
 
   if (loading) {
     return (
@@ -248,14 +209,14 @@ const Dashboard = () => {
             <span className="relative z-10">Cosmic Discoveries</span>
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <button
-            onClick={() => setIsModalOpen(true)}
+          <Link
+            to="/create-node"
             className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex items-center hover:from-purple-600 hover:to-indigo-600 transition-all duration-300"
             style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
           >
             <i className="bi bi-plus-lg mr-2"></i>
             <span>Add Cosmic Node</span>
-          </button>
+          </Link>
         </div>
 
         {nodes.length === 0 ? (
@@ -454,17 +415,7 @@ const Dashboard = () => {
         )}
       </div>
 
-      {/* Add Interest Modal */}
-      <Modal
-        isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
-        title="Create New Cosmic Node"
-      >
-        <InterestNodeForm
-          onSubmit={handleAddInterest}
-          onCancel={() => setIsModalOpen(false)}
-        />
-      </Modal>
+      {/* No modals - using dedicated pages instead */}
     </div>
   )
 }

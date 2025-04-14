@@ -11,6 +11,9 @@ import NotFound from './pages/NotFound'
 import CosmicExplorer from './pages/CosmicExplorer'
 import CosmicInsights from './pages/CosmicInsights'
 import InsightsLanding from './pages/InsightsLanding'
+import CreateNode from './pages/CreateNode'
+import CreateConnection from './pages/CreateConnection'
+import GenerateInsights from './pages/GenerateInsights'
 import AuthRedirectHandler from './components/AuthRedirectHandler'
 import AuthCallback from './pages/AuthCallback'
 import RegistrationSuccess from './pages/RegistrationSuccess'
@@ -77,6 +80,11 @@ function App() {
           <Route path="insights" element={user ? <CosmicInsights /> : <Navigate to="/login" />} />
           <Route path="connections" element={user ? <Connections /> : <Navigate to="/login" />} />
           <Route path="profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+
+          {/* New dedicated creation pages */}
+          <Route path="create-node" element={user ? <CreateNode /> : <Navigate to="/login" />} />
+          <Route path="create-connection" element={user ? <CreateConnection /> : <Navigate to="/login" />} />
+          <Route path="generate-insights" element={user ? <GenerateInsights /> : <Navigate to="/login" />} />
 
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />

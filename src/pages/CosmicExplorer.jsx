@@ -385,7 +385,7 @@ const CosmicExplorer = () => {
           <p className="text-purple-300 mb-8 max-w-md mx-auto">
             Begin your journey by adding celestial nodes representing your interests, passions, and areas of curiosity.
           </p>
-          <Link to="/dashboard"
+          <Link to="/create-node"
             className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 inline-block"
             style={{ boxShadow: '0 0 15px rgba(139, 92, 246, 0.3)' }}
           >

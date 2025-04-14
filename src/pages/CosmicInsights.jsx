@@ -1,17 +1,13 @@
 import { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
+import { Link } from 'react-router-dom'
 import { toast } from 'react-toastify'
-import { fetchInterestNodes, fetchConnections, generateConnections, fetchDiscoveryPrompts } from '../services/interestService'
-import Modal from '../components/Modal'
+import { fetchDiscoveryPrompts } from '../services/interestService'
 import DiscoveryPrompt from '../components/DiscoveryPrompt'
 
 const CosmicInsights = () => {
   // State management
-  const [nodes, setNodes] = useState([])
   const [discoveryPrompts, setDiscoveryPrompts] = useState([])
-  const [selectedNodes, setSelectedNodes] = useState([])
-  const [isSelectModalOpen, setIsSelectModalOpen] = useState(false)
-  const [isGenerating, setIsGenerating] = useState(false)
   const [loading, setLoading] = useState(true)
 
   // Load data on component mount
@@ -24,15 +20,8 @@ const CosmicInsights = () => {
     try {
       setLoading(true)
 
-      // Fetch all data in parallel for better performance
-      const [nodesResult, promptsResult] = await Promise.all([
-        fetchInterestNodes(),
-        fetchDiscoveryPrompts()
-      ])
-
-      if (nodesResult.success) {
-        setNodes(nodesResult.data)
-      }
+      // Fetch discovery prompts
+      const promptsResult = await fetchDiscoveryPrompts()
 
       if (promptsResult.success) {
         setDiscoveryPrompts(promptsResult.data)
@@ -45,48 +34,7 @@ const CosmicInsights = () => {
     }
   }
 
-  // Handle node selection
-  const handleNodeSelect = (nodeId) => {
-    setSelectedNodes(prev => {
-      if (prev.includes(nodeId)) {
-        return prev.filter(id => id !== nodeId)
-      } else {
-        return [...prev, nodeId]
-      }
-    })
-  }
-
-  // Handle generating connections and insights
-  const handleGenerateInsights = async () => {
-    if (selectedNodes.length < 2) {
-      toast.warning('Please select at least two nodes to generate insights')
-      return
-    }
-
-    try {
-      setIsGenerating(true)
-
-      const { success, discoveryPrompts: newPrompts, error } = await generateConnections(selectedNodes)
-
-      if (success) {
-        // Update the insights list
-        await loadData()
-
-        // Close the modal
-        setIsSelectModalOpen(false)
-        setSelectedNodes([])
-
-        toast.success('Cosmic insights generated successfully!')
-      } else {
-        toast.error(error?.message || 'Failed to generate insights')
-      }
-    } catch (error) {
-      console.error('Error generating insights:', error)
-      toast.error('An unexpected error occurred')
-    } finally {
-      setIsGenerating(false)
-    }
-  }
+  // Insights generation is now handled in the GenerateInsights page
 
   if (loading) {
     return (
@@ -135,14 +83,14 @@ const CosmicInsights = () => {
             <span className="relative z-10">Your Cosmic Insights</span>
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <button
-            onClick={() => setIsSelectModalOpen(true)}
+          <Link
+            to="/generate-insights"
             className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex items-center hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 cursor-pointer"
             style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
           >
             <i className="bi bi-plus-lg mr-2"></i>
             <span>Generate New Insights</span>
-          </button>
+          </Link>
         </div>
 
         {discoveryPrompts.length === 0 ? (
@@ -165,13 +113,13 @@ const CosmicInsights = () => {
             <p className="text-purple-300 mb-6 max-w-md mx-auto">
               Generate AI-powered insights to explore new dimensions and undiscovered territories in your cosmic knowledge universe.
             </p>
-            <button
-              onClick={() => setIsSelectModalOpen(true)}
+            <Link
+              to="/generate-insights"
               className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 inline-block cursor-pointer"
               style={{ boxShadow: '0 0 15px rgba(139, 92, 246, 0.3)' }}
             >
               Generate Cosmic Insights
-            </button>
+            </Link>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
