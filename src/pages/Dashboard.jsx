@@ -239,7 +239,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link to="/connections" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center group cursor-pointer">
+            <Link to="/insights" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center group cursor-pointer">
               <span>Generate New Insights</span>
               <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
             </Link>
@@ -435,8 +435,8 @@ const Dashboard = () => {
             <p className="text-purple-300 mb-6 max-w-md mx-auto">
               Generate AI-powered insights to explore new dimensions and undiscovered territories in your cosmic knowledge universe.
             </p>
-            <Link to="/connections"
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 inline-block"
+            <Link to="/insights"
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 inline-block cursor-pointer"
               style={{ boxShadow: '0 0 15px rgba(139, 92, 246, 0.3)' }}
             >
               Generate Cosmic Insights

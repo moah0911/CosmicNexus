@@ -37,12 +37,22 @@ const SimpleMouseTrail = () => {
     window.addEventListener('resize', setCanvasSize);
 
     // Track mouse position
+    let prevMouseX = null;
+    let prevMouseY = null;
+
     const handleMouseMove = (e) => {
       mouseX = e.clientX;
       mouseY = e.clientY;
 
-      // Add new particles on mouse move
-      addParticles(mouseX, mouseY, 3); // Add 3 particles per move
+      // Add new particles on mouse move, but only if there's significant movement
+      const velocity = Math.sqrt(Math.pow(mouseX - (prevMouseX || mouseX), 2) + Math.pow(mouseY - (prevMouseY || mouseY), 2));
+      if (velocity > 3) { // Only add particles when there's significant movement
+        addParticles(mouseX, mouseY, 2); // Add 2 particles per significant move
+      }
+
+      // Store previous position
+      prevMouseX = mouseX;
+      prevMouseY = mouseY;
     };
 
     window.addEventListener('mousemove', handleMouseMove);
@@ -52,11 +62,11 @@ const SimpleMouseTrail = () => {
       constructor(x, y) {
         this.x = x;
         this.y = y;
-        this.size = Math.random() * 8 + 5; // Much larger size for visibility
+        this.size = Math.random() * 3 + 2; // Smaller size for subtlety
         this.speedX = (Math.random() - 0.5) * 2;
         this.speedY = (Math.random() - 0.5) * 2;
         this.color = getRandomColor();
-        this.life = 60; // Much longer life
+        this.life = 40; // Moderate lifespan
         this.isStar = Math.random() > 0.3; // 70% chance to be a star
       }
 
@@ -69,12 +79,12 @@ const SimpleMouseTrail = () => {
       }
 
       draw() {
-        // Fade out more slowly
-        const opacity = Math.min(1, this.life / 40);
+        // Fade out gradually
+        const opacity = Math.min(0.8, this.life / 40); // Lower max opacity for subtlety
         ctx.globalAlpha = opacity;
 
-        // Add strong glow effect for all particles
-        ctx.shadowBlur = 20;
+        // Add subtle glow effect for all particles
+        ctx.shadowBlur = 10;
         ctx.shadowColor = this.color;
 
         if (this.isStar) {
@@ -85,16 +95,16 @@ const SimpleMouseTrail = () => {
           ctx.fillStyle = this.color;
           ctx.fill();
 
-          // Add extra glow for circles
+          // Add subtle glow for circles
           const gradient = ctx.createRadialGradient(
             this.x, this.y, 0,
-            this.x, this.y, this.size * 3
+            this.x, this.y, this.size * 2
           );
           gradient.addColorStop(0, this.color);
           gradient.addColorStop(1, 'rgba(0,0,0,0)');
 
           ctx.beginPath();
-          ctx.arc(this.x, this.y, this.size * 3, 0, Math.PI * 2);
+          ctx.arc(this.x, this.y, this.size * 2, 0, Math.PI * 2);
           ctx.fillStyle = gradient;
           ctx.fill();
         }
@@ -153,14 +163,14 @@ const SimpleMouseTrail = () => {
     function addParticles(x, y, count) {
       for (let i = 0; i < count; i++) {
         particles.push(new Particle(
-          x + (Math.random() - 0.5) * 15, // Add more randomness to position
-          y + (Math.random() - 0.5) * 15
+          x + (Math.random() - 0.5) * 8, // Less randomness for more precise trail
+          y + (Math.random() - 0.5) * 8
         ));
       }
 
-      // Limit particles for performance but allow more
-      if (particles.length > 150) {
-        particles = particles.slice(-150);
+      // Limit particles for performance and subtlety
+      if (particles.length > 80) {
+        particles = particles.slice(-80);
       }
     }
 
