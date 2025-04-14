@@ -3,17 +3,18 @@ import { toast } from 'react-toastify'
 import { motion } from 'framer-motion'
 import { supabase } from '../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
+import { ensureRelationshipTypeColumn } from '../utils/ensureRelationshipTypeColumn'
 
 const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
   // State for node selection
   const [sourceNode, setSourceNode] = useState(null)
   const [targetNode, setTargetNode] = useState(null)
-  
+
   // State for connection details
   const [description, setDescription] = useState('')
   const [connectionType, setConnectionType] = useState('related')
   const [strength, setStrength] = useState(3)
-  
+
   // UI state
   const [isCreating, setIsCreating] = useState(false)
   const [step, setStep] = useState(1) // 1: Select nodes, 2: Define relationship
@@ -26,14 +27,14 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
       setFilteredNodes(nodes)
       return
     }
-    
+
     const lowerSearchTerm = searchTerm.toLowerCase()
-    const filtered = nodes.filter(node => 
-      node.title.toLowerCase().includes(lowerSearchTerm) || 
+    const filtered = nodes.filter(node =>
+      node.title.toLowerCase().includes(lowerSearchTerm) ||
       node.description.toLowerCase().includes(lowerSearchTerm) ||
       node.category.toLowerCase().includes(lowerSearchTerm)
     )
-    
+
     setFilteredNodes(filtered)
   }, [searchTerm, nodes])
 
@@ -90,9 +91,12 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
     try {
       setIsCreating(true)
 
+      // Ensure the relationship_type column exists
+      await ensureRelationshipTypeColumn()
+
       // Get current user
       const { data: { user } } = await supabase.auth.getUser()
-      
+
       if (!user) {
         throw new Error('User not authenticated')
       }
@@ -105,8 +109,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
         target_node_id: targetNode.id,
         description: description.trim(),
         strength: strength,
-        // Only include relationship_type if it's not the default
-        ...(connectionType !== 'related' && { relationship_type: connectionType })
+        relationship_type: connectionType // Always include relationship_type
       }
 
       // Insert connection directly
@@ -168,14 +171,14 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="connection-creator"
       variants={containerVariants}
       initial="hidden"
       animate="visible"
     >
       {/* Progress indicator */}
-      <motion.div 
+      <motion.div
         className="flex items-center justify-center mb-8"
         variants={itemVariants}
       >
@@ -197,14 +200,14 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
       {/* Step 1: Node Selection */}
       {step === 1 && (
         <motion.div variants={containerVariants}>
-          <motion.h3 
+          <motion.h3
             className="text-xl font-medium text-purple-200 mb-4"
             variants={itemVariants}
           >
             Select Two Knowledge Nodes to Connect
           </motion.h3>
-          
-          <motion.div 
+
+          <motion.div
             className="mb-6 p-4 bg-indigo-900/30 rounded-lg border border-indigo-700/30 text-indigo-300 text-sm"
             variants={itemVariants}
           >
@@ -215,7 +218,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           </motion.div>
 
           {/* Search input */}
-          <motion.div 
+          <motion.div
             className="mb-6"
             variants={itemVariants}
           >
@@ -235,7 +238,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
 
           {/* Selected nodes preview */}
           {(sourceNode || targetNode) && (
-            <motion.div 
+            <motion.div
               className="mb-6 p-4 bg-black/40 rounded-xl shadow-sm border border-purple-800/30"
               variants={itemVariants}
               style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.1)' }}
@@ -249,7 +252,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
                         <i className={`bi bi-${getCategoryIcon(sourceNode.category)}`}></i>
                       </div>
                       <span className="text-purple-300">{sourceNode.title}</span>
-                      <button 
+                      <button
                         onClick={() => setSourceNode(null)}
                         className="text-purple-400 hover:text-purple-300 ml-2"
                       >
@@ -260,11 +263,11 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
                     <span className="text-purple-500 italic">Select source node...</span>
                   )}
                 </div>
-                
+
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/60 border border-purple-700/30">
                   <i className="bi bi-arrow-right text-purple-400"></i>
                 </div>
-                
+
                 <div className="flex-1 p-3 rounded-lg bg-black/60 border border-purple-700/30 min-h-[60px] flex items-center">
                   {targetNode ? (
                     <div className="flex items-center space-x-2">
@@ -272,7 +275,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
                         <i className={`bi bi-${getCategoryIcon(targetNode.category)}`}></i>
                       </div>
                       <span className="text-purple-300">{targetNode.title}</span>
-                      <button 
+                      <button
                         onClick={() => setTargetNode(null)}
                         className="text-purple-400 hover:text-purple-300 ml-2"
                       >
@@ -288,12 +291,12 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           )}
 
           {/* Node selection grid */}
-          <motion.div 
+          <motion.div
             className="max-h-[400px] overflow-y-auto pr-2 space-y-4"
             variants={containerVariants}
           >
             {filteredNodes.length === 0 ? (
-              <motion.div 
+              <motion.div
                 className="p-6 text-center border border-purple-800/30 rounded-xl bg-black/40"
                 variants={itemVariants}
               >
@@ -353,7 +356,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
                   </p>
                   {(sourceNode?.id === node.id || targetNode?.id === node.id) && (
                     <div className="mt-2 text-xs text-indigo-400 flex items-center">
-                      <i className="bi bi-check-circle-fill mr-1"></i> 
+                      <i className="bi bi-check-circle-fill mr-1"></i>
                       {sourceNode?.id === node.id ? 'Selected as source' : 'Selected as target'}
                     </div>
                   )}
@@ -363,7 +366,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           </motion.div>
 
           {/* Navigation buttons */}
-          <motion.div 
+          <motion.div
             className="mt-8 border-t border-purple-800/30 pt-6"
             variants={itemVariants}
           >
@@ -374,7 +377,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
               >
                 <i className="bi bi-x-circle mr-2"></i> Cancel
               </button>
-              
+
               <button
                 onClick={() => sourceNode && targetNode && setStep(2)}
                 disabled={!sourceNode || !targetNode}
@@ -395,15 +398,15 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
       {/* Step 2: Define Relationship */}
       {step === 2 && (
         <motion.div variants={containerVariants}>
-          <motion.h3 
+          <motion.h3
             className="text-xl font-medium text-purple-200 mb-4"
             variants={itemVariants}
           >
             Define the Connection
           </motion.h3>
-          
+
           {/* Selected nodes preview */}
-          <motion.div 
+          <motion.div
             className="mb-6 p-4 bg-black/40 rounded-xl shadow-sm border border-purple-800/30"
             variants={itemVariants}
           >
@@ -414,11 +417,11 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
                 </div>
                 <span className="text-purple-300">{sourceNode.title}</span>
               </div>
-              
+
               <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/60 border border-purple-700/30">
                 <i className="bi bi-arrow-right text-purple-400"></i>
               </div>
-              
+
               <div className="flex items-center space-x-2">
                 <div className="flex items-center justify-center w-8 h-8 rounded-full bg-black/60 text-purple-400 border border-purple-700/30">
                   <i className={`bi bi-${getCategoryIcon(targetNode.category)}`}></i>
@@ -429,7 +432,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           </motion.div>
 
           {/* Relationship Type */}
-          <motion.div 
+          <motion.div
             className="mb-6"
             variants={itemVariants}
           >
@@ -471,7 +474,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           </motion.div>
 
           {/* Connection Strength */}
-          <motion.div 
+          <motion.div
             className="mb-6"
             variants={itemVariants}
           >
@@ -503,7 +506,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           </motion.div>
 
           {/* Connection Description */}
-          <motion.div 
+          <motion.div
             className="mb-6"
             variants={itemVariants}
           >
@@ -518,7 +521,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           </motion.div>
 
           {/* Navigation buttons */}
-          <motion.div 
+          <motion.div
             className="mt-8 border-t border-purple-800/30 pt-6"
             variants={itemVariants}
           >
@@ -537,7 +540,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
                   <i className="bi bi-arrow-counterclockwise mr-2"></i> Reset
                 </button>
               </div>
-              
+
               <button
                 onClick={handleCreateConnection}
                 disabled={isCreating || !description.trim()}
