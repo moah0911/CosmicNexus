@@ -1,8 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'react-toastify'
-import { generateOTP, storeOTP, verifyOTP as verifyOTPCode, clearOTP } from '../utils/otpUtils'
-import { simulateSendOTPEmail } from '../utils/emailUtils'
+import { sendOTP, verifyOTP as verifyOTPCode } from '../services/otpService'
 
 const AuthContext = createContext()
 
@@ -47,22 +46,26 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Generate a 6-digit OTP code
-      const otp = generateOTP(6);
+      // Check if the email is already registered
+      const { data: { user } } = await supabase.auth.admin
+        .getUserByEmail(email)
+        .catch(() => ({ data: { user: null } }));
 
-      // Store the OTP with a 10-minute expiry
-      storeOTP(email, otp, 10);
-
-      // Send the OTP via email (simulated for now)
-      await simulateSendOTPEmail(email, otp);
+      if (user) {
+        throw new Error('Email is already registered');
+      }
 
       // Store the email and password temporarily for later registration
       sessionStorage.setItem('pendingRegistration', JSON.stringify({ email, password }));
 
-      // Log the OTP for testing purposes
-      console.log('Generated OTP for testing:', otp);
+      // Send OTP to the user's email
+      const { success, error } = await sendOTP(email);
 
-      toast.success('Verification code sent to your email. Check the console for the code.');
+      if (!success) {
+        throw error || new Error('Failed to send verification code');
+      }
+
+      toast.success('Verification code sent to your email');
 
       // Return success with email for the verification page
       return { success: true, email };
@@ -116,11 +119,11 @@ export function AuthProvider({ children }) {
 
   const verifyOTP = async (email, token) => {
     try {
-      // Verify the OTP code
-      const isValid = verifyOTPCode(email, token);
+      // Verify the OTP code using our secure service
+      const { success: otpSuccess, error: otpError } = await verifyOTPCode(email, token);
 
-      if (!isValid) {
-        throw new Error('Invalid or expired verification code');
+      if (!otpSuccess) {
+        throw otpError || new Error('Invalid or expired verification code');
       }
 
       // Get the stored registration data
@@ -130,12 +133,24 @@ export function AuthProvider({ children }) {
         throw new Error('Registration data not found');
       }
 
+      // First, check if the user already exists but is unconfirmed
+      const { data: { user: existingUser } } = await supabase.auth.admin
+        .getUserByEmail(pendingRegistration.email)
+        .catch(() => ({ data: { user: null } }));
+
+      if (existingUser) {
+        // User exists but might be unconfirmed, try to delete it first
+        await supabase.auth.admin
+          .deleteUser(existingUser.id)
+          .catch(err => console.warn('Could not delete existing user:', err));
+      }
+
       // Complete the registration with Supabase
-      const { error } = await supabase.auth.signUp({
+      const { data, error } = await supabase.auth.signUp({
         email: pendingRegistration.email,
         password: pendingRegistration.password,
         options: {
-          // Skip email verification since we've already verified with OTP
+          // Important: Set this to true to auto-confirm the email
           emailRedirectTo: undefined,
           data: {
             email_verified: true
@@ -145,13 +160,41 @@ export function AuthProvider({ children }) {
 
       if (error) throw error;
 
-      // Clear the OTP and pending registration data
-      clearOTP(email);
+      // If we have a user and a session, the email is confirmed
+      if (data?.user) {
+        // Force confirm the email if needed
+        try {
+          // This is an admin operation that might not be available
+          await supabase.auth.admin.updateUserById(
+            data.user.id,
+            { email_confirm: true }
+          );
+        } catch (adminError) {
+          console.warn('Could not use admin API to confirm email:', adminError);
+          // Continue anyway, we'll try another approach
+        }
+
+        // Try to sign in immediately to confirm the account works
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email: pendingRegistration.email,
+          password: pendingRegistration.password
+        });
+
+        if (signInError) {
+          console.warn('Auto sign-in failed:', signInError);
+        } else {
+          // Sign out so the user can sign in manually
+          await supabase.auth.signOut();
+        }
+      }
+
+      // Clear pending registration data
       sessionStorage.removeItem('pendingRegistration');
 
-      toast.success('Email verified successfully!');
+      toast.success('Email verified successfully! You can now log in.');
       return { success: true };
     } catch (error) {
+      console.error('Verification error:', error);
       toast.error(error.message || 'Invalid verification code');
       return { success: false, error };
     }
@@ -166,18 +209,17 @@ export function AuthProvider({ children }) {
         throw new Error('Registration data not found');
       }
 
-      // Generate a new OTP code
-      const otp = generateOTP(6);
+      // Send a new OTP to the user's email
+      const { success, error } = await sendOTP(email);
 
-      // Store the new OTP with a 10-minute expiry
-      storeOTP(email, otp, 10);
-
-      // Send the OTP via email (simulated for now)
-      await simulateSendOTPEmail(email, otp);
+      if (!success) {
+        throw error || new Error('Failed to send verification code');
+      }
 
       toast.success('Verification code resent to your email');
       return { success: true };
     } catch (error) {
+      console.error('Resend OTP error:', error);
       toast.error(error.message || 'Failed to resend verification code');
       return { success: false, error };
     }

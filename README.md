@@ -1,30 +1,60 @@
-# Resonance Map
+# Cosmic Nexus
 
-A sophisticated visual tool to map your interests and discover connections between them, featuring advanced graph visualizations and interactive node cards.
+A sophisticated visual tool to map your interests and discover connections between them, featuring advanced graph visualizations, interactive node cards, and secure OTP-based authentication.
+
+## Features
+
+- **Interactive Graph Visualization**: Visualize your interests and their connections
+- **Secure OTP Authentication**: Email verification using one-time passwords
+- **Personalized Interest Mapping**: Create and organize your interests
+- **Connection Discovery**: Find unexpected connections between your interests
 
 ## Quick Start
 
-1. **Fix Database Tables**:
+1. **Set Up Environment Variables**:
+   - Copy `.env.example` to `.env`
+   - Update with your Supabase and EmailJS credentials
+   - See [Email Setup Guide](docs/EMAIL_SETUP.md) for EmailJS configuration
+
+2. **Install Dependencies**:
    ```bash
-   # Install dependencies
    npm install
-   
+   ```
+
+3. **Set Up Database Tables**:
+   ```bash
    # Run the database setup script
    npm run setup-db
    ```
-   
+
    If the script doesn't work, you can manually create the tables:
    - Go to your Supabase dashboard (https://app.supabase.com)
    - Navigate to the SQL Editor
-   - Copy and paste the contents of `direct-setup.sql`
+   - Copy and paste the contents of `direct-setup.sql` and `supabase/migrations/20240414000000_create_otp_table.sql`
    - Run the SQL
 
-2. **Start the Application**:
+4. **Start the Application**:
    ```bash
    npm run dev
    ```
 
-3. Open your browser and navigate to `http://localhost:5173`
+5. Open your browser and navigate to `http://localhost:3000`
+
+## Authentication System
+
+Cosmic Nexus uses a secure OTP-based authentication system:
+
+1. **Registration**: Users enter their email and password
+2. **Email Verification**: A one-time password (OTP) is sent to the user's email
+3. **OTP Verification**: User enters the OTP to verify their email
+4. **Account Creation**: After verification, the account is created and the user can log in
+
+This approach provides several benefits:
+- No need for email confirmation links that might break in different environments
+- More secure than simple email/password authentication
+- Better user experience with immediate feedback
+
+For detailed setup instructions, see the [Email Setup Guide](docs/EMAIL_SETUP.md).
 
 ## Advanced Visualization Features
 

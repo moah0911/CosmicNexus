@@ -6,6 +6,10 @@ import './index.css'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
+import { initEmailService } from './services/emailService'
+
+// Initialize EmailJS
+initEmailService();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

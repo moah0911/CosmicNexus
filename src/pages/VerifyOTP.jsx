@@ -193,21 +193,17 @@ const VerifyOTP = () => {
             </p>
           </motion.div>
 
-          {/* For development/testing only - shows the OTP in the console */}
-          {process.env.NODE_ENV !== 'production' && (
-            <motion.div
-              className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm"
-              variants={itemVariants}
-            >
-              <p className="font-medium">Developer Mode</p>
-              <p>Check the browser console to see the simulated email with the OTP code.</p>
-              <p className="mt-2">Open the browser console by pressing <strong>F12</strong> or <strong>Ctrl+Shift+J</strong> (Windows/Linux) or <strong>Cmd+Option+J</strong> (Mac).</p>
-              <p className="mt-2">Look for a message that looks like:</p>
-              <pre className="mt-1 p-2 bg-gray-100 rounded text-xs overflow-auto">
-                Generated OTP for testing: 123456
-              </pre>
-            </motion.div>
-          )}
+          {/* For testing purposes - shows instructions to find the OTP */}
+          <motion.div
+            className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm"
+            variants={itemVariants}
+          >
+            <p className="font-medium">Need help finding your verification code?</p>
+            <p>Check your browser console by pressing <strong>F12</strong> or <strong>Ctrl+Shift+J</strong> (Windows/Linux) or <strong>Cmd+Option+J</strong> (Mac).</p>
+            <p className="mt-2">Look for a message with a purple background containing your OTP code.</p>
+          </motion.div>
+
+
         </div>
       </motion.div>
     </div>
