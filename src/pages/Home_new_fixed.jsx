@@ -391,7 +391,7 @@ const Home = () => {
         <div className="container mx-auto max-w-6xl">
           <div className="flex justify-center items-center">
             <div className="text-gray-400">
-              © 2023 Cosmic Knowledge Nexus
+              © 2025 moah0911 under MIT license
             </div>
           </div>
         </div>

@@ -10,7 +10,7 @@ const Footer = () => {
       </div>
 
       <div className="container mx-auto px-4 relative z-10">
-        <div className="flex justify-center items-center">
+        <div className="flex flex-col justify-center items-center space-y-4">
           <a
             href="mailto:stormshots0911@gmail.com"
             className="text-purple-300 hover:text-purple-100 transition-all duration-300 transform hover:scale-105 flex items-center bg-gradient-to-r from-purple-900/50 to-indigo-900/50 px-6 py-3 rounded-full"
@@ -19,6 +19,10 @@ const Footer = () => {
             <i className="bi bi-envelope-fill mr-2"></i>
             <span>Talk to Creator</span>
           </a>
+          
+          <div className="text-gray-400 text-sm mt-4">
+            © 2025 moah0911 under MIT license
+          </div>
         </div>
       </div>
     </footer>
