@@ -11,11 +11,11 @@ export const DB_SCHEMA = {
   },
   COLUMNS: {
     INTEREST_NODES: [
-      'id', 'user_id', 'title', 'description', 'category', 
-      'source', 'created_at', 'updated_at'
+      'id', 'user_id', 'title', 'description', 'category',
+      'notes', 'created_at', 'updated_at'
     ],
     CONNECTIONS: [
-      'id', 'user_id', 'source_node_id', 'target_node_id', 
+      'id', 'user_id', 'source_node_id', 'target_node_id',
       'description', 'strength', 'created_at', 'updated_at'
       // Note: relationship_type is intentionally omitted to avoid schema cache issues
     ],
@@ -41,12 +41,12 @@ export const DB_SCHEMA = {
 export const getSafeColumns = (table) => {
   const tableKey = Object.keys(DB_SCHEMA.TABLES)
     .find(key => DB_SCHEMA.TABLES[key] === table)
-  
+
   if (!tableKey || !DB_SCHEMA.COLUMNS[tableKey]) {
     console.warn(`No safe columns defined for table: ${table}`)
     return '*' // Fallback to all columns, but this might cause issues
   }
-  
+
   return DB_SCHEMA.COLUMNS[tableKey].join(', ')
 }
 
@@ -58,14 +58,14 @@ export const getSafeColumns = (table) => {
  */
 export const addClientFields = (table, records) => {
   if (!records || !Array.isArray(records)) return []
-  
+
   const tableKey = Object.keys(DB_SCHEMA.TABLES)
     .find(key => DB_SCHEMA.TABLES[key] === table)
-  
+
   if (!tableKey || !DB_SCHEMA.CLIENT_FIELDS[tableKey]) {
     return records // No client fields to add
   }
-  
+
   return records.map(record => ({
     ...record,
     ...DB_SCHEMA.CLIENT_FIELDS[tableKey]
@@ -80,12 +80,12 @@ export const addClientFields = (table, records) => {
  */
 export const sanitizeForDB = (table, record) => {
   if (!record || typeof record !== 'object') return {}
-  
+
   const tableKey = Object.keys(DB_SCHEMA.TABLES)
     .find(key => DB_SCHEMA.TABLES[key] === table)
-  
+
   if (!tableKey) return record
-  
+
   // Create a new object with only the allowed columns
   const sanitized = {}
   DB_SCHEMA.COLUMNS[tableKey].forEach(column => {
@@ -93,7 +93,7 @@ export const sanitizeForDB = (table, record) => {
       sanitized[column] = record[column]
     }
   })
-  
+
   return sanitized
 }
 

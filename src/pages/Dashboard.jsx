@@ -145,7 +145,7 @@ const Dashboard = () => {
           <div className="mt-4 md:mt-0">
             <Link
               to="/map"
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex items-center hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 group"
+              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex items-center hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 group cursor-pointer"
               style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
             >
               <i className="bi bi-stars mr-2"></i>
@@ -181,7 +181,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link to="/map" className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center group">
+            <Link to="/map" className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center group cursor-pointer">
               <span>Explore Your Nodes</span>
               <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
             </Link>
@@ -210,7 +210,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link to="/connections" className="text-indigo-400 hover:text-indigo-300 text-sm font-medium flex items-center group">
+            <Link to="/connections" className="text-indigo-400 hover:text-indigo-300 text-sm font-medium flex items-center group cursor-pointer">
               <span>View Connections</span>
               <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
             </Link>
@@ -239,7 +239,7 @@ const Dashboard = () => {
             </div>
           </div>
           <div className="mt-4">
-            <Link to="/connections" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center group">
+            <Link to="/connections" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center group cursor-pointer">
               <span>Generate New Insights</span>
               <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
             </Link>
@@ -351,7 +351,7 @@ const Dashboard = () => {
             <span className="relative z-10">Celestial Connections</span>
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <Link to="/connections" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group">
+          <Link to="/connections" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
             <span>View All</span>
             <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
           </Link>
@@ -409,7 +409,7 @@ const Dashboard = () => {
             <span className="relative z-10">Cosmic Insights</span>
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <Link to="/connections" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group">
+          <Link to="/connections" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
             <span>Generate New</span>
             <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
           </Link>
