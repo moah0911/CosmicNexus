@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 
 /**
- * A hook to make an element draggable
+ * A hook to make an element draggable with both mouse and touch support
  * @param {React.RefObject} ref - Reference to the element to make draggable
  * @param {Object} options - Options for the draggable behavior
  * @returns {Object} - Draggable state and handlers
@@ -17,35 +17,57 @@ export const useDraggable = (ref, options = {}) => {
   const [position, setPosition] = useState(initialPosition);
   const [startPos, setStartPos] = useState({ x: 0, y: 0 });
 
-  // Handle mouse down event to start dragging
-  const handleMouseDown = useCallback((e) => {
+  // Get client coordinates from either mouse or touch event
+  const getClientCoords = useCallback((e) => {
+    // Touch event
+    if (e.touches && e.touches.length) {
+      return {
+        clientX: e.touches[0].clientX,
+        clientY: e.touches[0].clientY,
+      };
+    }
+    // Mouse event
+    return {
+      clientX: e.clientX,
+      clientY: e.clientY,
+    };
+  }, []);
+
+  // Handle start dragging (mouse down or touch start)
+  const handleStart = useCallback((e) => {
     if (disabled || !ref.current) return;
-    
+
     // Prevent default behavior to avoid text selection during drag
     e.preventDefault();
-    
+
     // Set dragging state
     setIsDragging(true);
-    
-    // Store the initial mouse position
-    setStartPos({
-      x: e.clientX - position.x,
-      y: e.clientY - position.y,
-    });
-  }, [disabled, position, ref]);
 
-  // Handle mouse move event during dragging
-  const handleMouseMove = useCallback((e) => {
+    // Get coordinates
+    const coords = getClientCoords(e);
+
+    // Store the initial position
+    setStartPos({
+      x: coords.clientX - position.x,
+      y: coords.clientY - position.y,
+    });
+  }, [disabled, position, ref, getClientCoords]);
+
+  // Handle dragging (mouse move or touch move)
+  const handleMove = useCallback((e) => {
     if (!isDragging) return;
-    
+
+    // Get coordinates
+    const coords = getClientCoords(e);
+
     // Calculate new position
-    let newX = e.clientX - startPos.x;
-    let newY = e.clientY - startPos.y;
-    
+    let newX = coords.clientX - startPos.x;
+    let newY = coords.clientY - startPos.y;
+
     // Apply bounds if provided
     if (bounds && ref.current) {
       const rect = ref.current.getBoundingClientRect();
-      
+
       if (bounds.left !== undefined) {
         newX = Math.max(bounds.left, newX);
       }
@@ -59,40 +81,95 @@ export const useDraggable = (ref, options = {}) => {
         newY = Math.min(bounds.bottom - rect.height, newY);
       }
     }
-    
+
     // Update position
     setPosition({ x: newX, y: newY });
-  }, [isDragging, startPos, bounds, ref]);
+  }, [isDragging, startPos, bounds, ref, getClientCoords]);
 
-  // Handle mouse up event to stop dragging
-  const handleMouseUp = useCallback(() => {
+  // Handle end dragging (mouse up or touch end)
+  const handleEnd = useCallback(() => {
     setIsDragging(false);
   }, []);
 
-  // Add and remove event listeners
+  // Add and remove event listeners for mouse events
   useEffect(() => {
     if (disabled) return;
-    
-    document.addEventListener('mousemove', handleMouseMove);
-    document.addEventListener('mouseup', handleMouseUp);
-    
-    return () => {
-      document.removeEventListener('mousemove', handleMouseMove);
-      document.removeEventListener('mouseup', handleMouseUp);
-    };
-  }, [handleMouseMove, handleMouseUp, disabled]);
 
-  // Add mousedown event listener to the element
+    // Mouse events
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleEnd);
+
+    // Touch events
+    document.addEventListener('touchmove', handleMove, { passive: false });
+    document.addEventListener('touchend', handleEnd);
+    document.addEventListener('touchcancel', handleEnd);
+
+    return () => {
+      // Mouse events
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleEnd);
+
+      // Touch events
+      document.removeEventListener('touchmove', handleMove);
+      document.removeEventListener('touchend', handleEnd);
+      document.removeEventListener('touchcancel', handleEnd);
+    };
+  }, [handleMove, handleEnd, disabled]);
+
+  // Add event listeners to the element
   useEffect(() => {
     if (!ref.current || disabled) return;
-    
+
     const element = ref.current;
-    element.addEventListener('mousedown', handleMouseDown);
-    
+
+    // Mouse events
+    element.addEventListener('mousedown', handleStart);
+
+    // Touch events
+    element.addEventListener('touchstart', handleStart, { passive: false });
+
     return () => {
-      element.removeEventListener('mousedown', handleMouseDown);
+      // Mouse events
+      element.removeEventListener('mousedown', handleStart);
+
+      // Touch events
+      element.removeEventListener('touchstart', handleStart);
     };
-  }, [ref, handleMouseDown, disabled]);
+  }, [ref, handleStart, disabled]);
+
+  // Update bounds when window is resized
+  useEffect(() => {
+    if (disabled) return;
+
+    const handleResize = () => {
+      if (isDragging) return;
+
+      // Keep the modal within the viewport after resize
+      if (bounds && ref.current) {
+        const rect = ref.current.getBoundingClientRect();
+        let newX = position.x;
+        let newY = position.y;
+
+        if (rect.right > window.innerWidth) {
+          newX = window.innerWidth - rect.width;
+        }
+
+        if (rect.bottom > window.innerHeight) {
+          newY = window.innerHeight - rect.height;
+        }
+
+        if (newX !== position.x || newY !== position.y) {
+          setPosition({ x: newX, y: newY });
+        }
+      }
+    };
+
+    window.addEventListener('resize', handleResize);
+
+    return () => {
+      window.removeEventListener('resize', handleResize);
+    };
+  }, [disabled, isDragging, position, bounds, ref]);
 
   return {
     isDragging,

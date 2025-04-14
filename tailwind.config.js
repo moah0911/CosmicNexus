@@ -59,6 +59,7 @@ export default {
         'spin-slow': 'spin 60s linear infinite',
         'fadeIn': 'fadeIn 0.3s ease-in-out',
         'scaleIn': 'scaleIn 0.3s ease-in-out',
+        'bounce-subtle': 'bounce-subtle 2s ease-in-out infinite',
       },
       keyframes: {
         float: {
@@ -78,15 +79,19 @@ export default {
           '100%': { transform: 'scale(1)', opacity: '1' },
         },
         shootingStar: {
-          '0%': { 
+          '0%': {
             transform: 'translateX(0) translateY(0) rotate(-35deg)',
             opacity: '1'
           },
           '70%': { opacity: '1' },
-          '100%': { 
+          '100%': {
             transform: 'translateX(1200px) translateY(300px) rotate(-35deg)',
             opacity: '0'
           },
+        },
+        'bounce-subtle': {
+          '0%, 100%': { transform: 'translateY(0)' },
+          '50%': { transform: 'translateY(-3px)' },
         }
       }
     },
