@@ -11,7 +11,6 @@ import NotFound from './pages/NotFound'
 import CosmicExplorer from './pages/CosmicExplorer'
 import AuthRedirectHandler from './components/AuthRedirectHandler'
 import AuthCallback from './pages/AuthCallback'
-import VerifyOTP from './pages/VerifyOTP'
 import RegistrationSuccess from './pages/RegistrationSuccess'
 
 function App() {
@@ -60,7 +59,6 @@ function App() {
           <Route path="login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
           <Route path="register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
           <Route path="registration-success" element={!user ? <RegistrationSuccess /> : <Navigate to="/dashboard" />} />
-          <Route path="verify-otp" element={!user ? <VerifyOTP /> : <Navigate to="/dashboard" />} />
 
           {/* Protected Routes */}
           <Route path="dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
