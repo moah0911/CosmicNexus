@@ -490,11 +490,12 @@ const CosmicExplorer = () => {
               ))}
 
               <span className="px-2 py-0.5 text-xs rounded-full bg-blue-900/50 text-blue-300 ml-auto">
-                Connected to {
-                  connections.filter(
+                {(() => {
+                  const connectionCount = connections.filter(
                     conn => conn.source_node_id === activeNode.id || conn.target_node_id === activeNode.id
-                  ).length
-                } other nodes
+                  ).length;
+                  return `Connected to ${connectionCount === 1 ? '1 other node' : connectionCount + ' other nodes'}`;
+                })()}
               </span>
             </div>
           </div>

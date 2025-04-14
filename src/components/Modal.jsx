@@ -93,18 +93,14 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               ref={modalRef}
               className="bg-black/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-xl md:max-w-2xl max-h-[80vh] overflow-y-auto relative text-purple-200 mx-auto cursor-move"
               style={{
-                boxShadow: isDragging
-                  ? '0 15px 60px rgba(124, 58, 237, 0.7)'
-                  : '0 10px 50px rgba(124, 58, 237, 0.5)',
+                boxShadow: '0 10px 50px rgba(124, 58, 237, 0.5)',
                 WebkitOverflowScrolling: 'touch', // Improve scrolling on iOS
                 msOverflowStyle: 'none', // Hide scrollbars in IE/Edge
                 scrollbarWidth: 'thin', // Thin scrollbars in Firefox
-                border: isDragging
-                  ? '2px solid rgba(139, 92, 246, 0.6)'
-                  : '1px solid rgba(139, 92, 246, 0.3)',
-                backgroundImage: 'radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.1), transparent 70%)',
+                border: '1px solid rgba(139, 92, 246, 0.3)',
+                backgroundImage: 'radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.15), transparent 70%)',
                 transform: isDragging ? `translate(${position.x}px, ${position.y}px)` : undefined,
-                transition: isDragging ? 'none' : 'transform 0.3s ease-out, box-shadow 0.3s ease, border 0.3s ease'
+                transition: isDragging ? 'none' : 'transform 0.3s ease-out'
               }}
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -121,29 +117,22 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               <div className="absolute -top-3 -left-3 w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/10 to-indigo-500/10 z-0"></div>
               <div className="absolute -bottom-3 -right-3 w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 z-0"></div>
 
-              {/* Draggable indicator */}
-              <div className={`absolute -top-2 left-1/2 transform -translate-x-1/2 bg-purple-900/80 text-purple-200 text-xs px-3 py-1 rounded-full border border-purple-700/50 z-20 flex items-center space-x-1 ${isDragging ? 'opacity-100' : 'opacity-70'} ${!isDragging ? 'animate-bounce-subtle' : ''}`}>
-                <i className="bi bi-arrows-move"></i>
-                <span>{isDragging ? 'Moving...' : 'Draggable'}</span>
-              </div>
+
 
               <div
                 ref={dragHandleRef}
-                className="sticky top-0 z-10 flex justify-between items-center p-5 border-b border-purple-800/30 bg-black/95 backdrop-blur-md cursor-move"
+                className="sticky top-0 z-10 flex justify-between items-center p-5 border-b border-indigo-800/30 bg-gradient-to-r from-indigo-900/80 to-purple-900/80 backdrop-blur-md cursor-move rounded-t-2xl"
               >
                 <div className="flex items-center overflow-hidden">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600/20 to-indigo-600/20 flex items-center justify-center mr-3 shadow-md border border-purple-700/30">
-                    <i className="bi bi-stars text-purple-400"></i>
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-600/30 to-purple-600/30 flex items-center justify-center mr-3 shadow-md border border-indigo-500/40">
+                    <i className="bi bi-stars text-indigo-300 text-xl"></i>
                   </div>
-                  <h2 className="text-xl md:text-2xl font-bold text-purple-200 truncate">{title}</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-indigo-100 truncate">{title}</h2>
                 </div>
                 <div className="flex items-center space-x-2 flex-shrink-0">
-                  <div className="flex text-xs text-purple-400 bg-purple-900/30 px-2 py-1 rounded-md border border-purple-700/30 animate-pulse">
-                    <i className="bi bi-arrows-move mr-1"></i> Drag to Move
-                  </div>
                   <button
                     onClick={onClose}
-                    className="text-purple-400 hover:text-purple-300 w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-all duration-300 transform hover:rotate-90"
+                    className="text-indigo-300 hover:text-white w-10 h-10 rounded-full flex items-center justify-center hover:bg-indigo-600/30 transition-all duration-300 transform hover:rotate-90 border border-indigo-500/30"
                     aria-label="Close modal"
                   >
                     <i className="bi bi-x-lg text-xl"></i>
@@ -155,15 +144,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
                 {children}
               </div>
 
-              {/* Modal controls */}
-              <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
-                <div className="flex items-center space-x-2 bg-black/60 px-3 py-1 rounded-full border border-purple-700/30">
-                  <div className="flex items-center text-xs text-purple-400">
-                    <i className="bi bi-grip-horizontal mr-1"></i>
-                    <span className="hidden sm:inline-block">Drag to move</span>
-                  </div>
-                </div>
-              </div>
+
             </motion.div>
             </motion.div>
           </div>

@@ -15,7 +15,7 @@ const BasicGraphView = ({ nodes, connections }) => {
       default: return '#6b7280' // gray-500
     }
   };
-  
+
   // Validate input data
   if (!Array.isArray(nodes) || !Array.isArray(connections)) {
     return (
@@ -24,15 +24,15 @@ const BasicGraphView = ({ nodes, connections }) => {
           <i className="bi bi-exclamation-triangle text-4xl mb-4"></i>
           <h3 className="text-xl font-medium mb-2">Invalid data format</h3>
           <p className="text-gray-300">
-            {!Array.isArray(nodes) 
-              ? "Invalid nodes data format." 
+            {!Array.isArray(nodes)
+              ? "Invalid nodes data format."
               : "Invalid connections data format."}
           </p>
         </div>
       </div>
     );
   }
-  
+
   // Show message if no nodes
   if (nodes.length === 0) {
     return (
@@ -45,21 +45,21 @@ const BasicGraphView = ({ nodes, connections }) => {
       </div>
     );
   }
-  
+
   return (
     <div className="w-full h-[600px] bg-gradient-to-br from-gray-900 to-slate-900 rounded-xl shadow-lg p-8 overflow-auto">
       <h2 className="text-white text-xl font-bold mb-4">Knowledge Graph</h2>
-      
+
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 text-white">
         {nodes.map(node => {
           // Calculate connection count for this node
-          const nodeConnectionCount = connections.filter(conn => 
+          const nodeConnectionCount = connections.filter(conn =>
             conn.source_node_id === node.id || conn.target_node_id === node.id
           ).length;
-          
+
           return (
-            <div 
-              key={node.id} 
+            <div
+              key={node.id}
               className="p-4 rounded-lg border border-opacity-30 transition-all hover:scale-105"
               style={{
                 backgroundColor: `${getNodeColor(node.category)}20`,
@@ -69,7 +69,7 @@ const BasicGraphView = ({ nodes, connections }) => {
               <div className="flex justify-between items-start">
                 <h3 className="font-medium">{node.title}</h3>
                 <span className="bg-gray-800 px-2 py-1 rounded-full text-xs">
-                  {nodeConnectionCount} connections
+                  {nodeConnectionCount === 1 ? '1 connection' : `${nodeConnectionCount} connections`}
                 </span>
               </div>
               <p className="text-sm opacity-80 mt-1">{node.category}</p>
@@ -78,7 +78,7 @@ const BasicGraphView = ({ nodes, connections }) => {
           );
         })}
       </div>
-      
+
       {connections.length > 0 && (
         <div className="mt-8 bg-gray-800 bg-opacity-50 p-4 rounded-lg">
           <h3 className="text-white text-lg font-medium mb-2">Connections:</h3>
@@ -86,9 +86,9 @@ const BasicGraphView = ({ nodes, connections }) => {
             {connections.map(conn => {
               const sourceNode = nodes.find(n => n.id === conn.source_node_id);
               const targetNode = nodes.find(n => n.id === conn.target_node_id);
-              
+
               if (!sourceNode || !targetNode) return null;
-              
+
               return (
                 <div key={conn.id} className="bg-gray-700 bg-opacity-30 p-3 rounded border border-gray-600">
                   <div className="flex items-center text-sm">
