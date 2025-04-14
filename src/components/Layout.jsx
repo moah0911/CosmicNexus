@@ -11,6 +11,9 @@ const Layout = () => {
   const { user } = useAuth()
   const location = useLocation()
 
+  // Determine if we're on a page that needs special layout treatment
+  const isSpecialPage = ['/map', '/insights'].some(path => location.pathname.includes(path))
+
   return (
     <div className="flex flex-col min-h-screen bg-black overflow-hidden">
       {/* Fixed background to prevent white flashes */}
@@ -30,15 +33,25 @@ const Layout = () => {
 
       {/* Subtle gradient overlay */}
       <div className="fixed inset-0 bg-gradient-to-b from-purple-900/10 to-black/30 z-0 pointer-events-none"></div>
-      <Navbar />
-      <main className="flex-grow container mx-auto px-4 py-8 relative z-10">
+
+      {/* Navbar with dynamic z-index */}
+      <div className="relative" style={{ zIndex: 45 }}>
+        <Navbar />
+      </div>
+
+      {/* Main content with adjusted padding based on page type */}
+      <main className={`flex-grow container mx-auto px-4 md:px-6 lg:px-8 relative z-10 ${isSpecialPage ? 'py-4 md:py-6' : 'py-6 md:py-8'}`}>
         <AnimatePresence mode="wait">
           <PageTransition key={location.pathname}>
             <Outlet />
           </PageTransition>
         </AnimatePresence>
       </main>
-      <Footer />
+
+      {/* Footer with dynamic z-index */}
+      <div className="relative" style={{ zIndex: 40 }}>
+        <Footer />
+      </div>
     </div>
   )
 }

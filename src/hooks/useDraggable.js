@@ -86,11 +86,19 @@ export const useDraggable = (ref, options = {}) => {
       const width = rect.width;
       const height = rect.height;
 
-      // Ensure the modal stays within the viewport
+      // Get header and footer heights (if they exist)
+      const header = document.querySelector('nav');
+      const footer = document.querySelector('footer');
+      const headerHeight = header ? header.offsetHeight : 0;
+      const footerHeight = footer ? footer.offsetHeight : 0;
+
+      // Ensure the modal stays within the viewport and respects header/footer
       if (newX < 0) newX = 0;
-      if (newY < 0) newY = 0;
+      if (newY < headerHeight + 10) newY = headerHeight + 10; // Add padding from header
       if (newX + width > window.innerWidth) newX = window.innerWidth - width;
-      if (newY + height > window.innerHeight) newY = window.innerHeight - height;
+      if (newY + height > window.innerHeight - footerHeight - 10) {
+        newY = window.innerHeight - height - footerHeight - 10; // Add padding from footer
+      }
     }
 
     // Update position
@@ -175,16 +183,30 @@ export const useDraggable = (ref, options = {}) => {
     };
   }, [disabled, isDragging, ref]);
 
-  // Function to center the element in the viewport
+  // Function to center the element in the viewport with header/footer awareness
   const centerElement = useCallback(() => {
     if (ref.current) {
       const rect = ref.current.getBoundingClientRect();
+
+      // Get header and footer heights (if they exist)
+      const header = document.querySelector('nav');
+      const footer = document.querySelector('footer');
+      const headerHeight = header ? header.offsetHeight : 0;
+      const footerHeight = footer ? footer.offsetHeight : 0;
+
+      // Calculate available viewport height accounting for header and footer
+      const availableHeight = window.innerHeight - headerHeight - footerHeight;
+
+      // Center horizontally
       const newX = (window.innerWidth - rect.width) / 2;
-      const newY = (window.innerHeight - rect.height) / 2;
+
+      // Center vertically in the available space, with slight offset toward the top
+      // for better visibility (accounting for header)
+      const newY = headerHeight + (availableHeight - rect.height) / 2 - 20;
 
       // Ensure we don't position offscreen
       const safeX = Math.max(0, Math.min(newX, window.innerWidth - rect.width));
-      const safeY = Math.max(0, Math.min(newY, window.innerHeight - rect.height));
+      const safeY = Math.max(headerHeight + 10, Math.min(newY, window.innerHeight - rect.height - footerHeight - 10));
 
       setPosition({ x: safeX, y: safeY });
     }

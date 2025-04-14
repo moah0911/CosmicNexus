@@ -31,8 +31,8 @@ const Navbar = () => {
 
   return (
     <nav className={`sticky top-0 z-50 transition-all duration-300 ${isScrolled ? 'bg-black/80 backdrop-blur-sm border-b border-purple-900/50' : 'bg-black/60 border-b border-purple-900/30'}`}>
-      <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
+      <div className="container mx-auto px-4 md:px-6 lg:px-8">
+        <div className="flex justify-between items-center h-auto py-3 md:py-4 lg:h-16">
           {/* Logo */}
           <Link to="/" className="flex items-center space-x-2">
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-800 to-indigo-800 flex items-center justify-center text-white relative overflow-hidden"
@@ -111,8 +111,8 @@ const Navbar = () => {
 
         {/* Mobile Navigation */}
         {isMenuOpen && (
-          <div className="md:hidden py-4 border-t border-purple-900/30 bg-black/80 backdrop-blur-sm">
-            <div className="flex flex-col space-y-4">
+          <div className="md:hidden py-4 border-t border-purple-900/30 bg-black/90 backdrop-blur-md transition-all duration-300 max-h-[80vh] overflow-y-auto">
+            <div className="flex flex-col space-y-3 px-2">
               <Link
                 to="/"
                 className={`${isActive('/')} px-2 py-1 rounded-md`}

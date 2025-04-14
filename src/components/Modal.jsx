@@ -61,7 +61,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-hidden">
+        <div className="fixed inset-0 z-[100] overflow-hidden">
           {/* Backdrop */}
           <motion.div
             className="fixed inset-0 bg-black/70 backdrop-blur-sm"
@@ -84,12 +84,12 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               border: '1px solid rgba(139, 92, 246, 0.3)',
               backgroundImage: 'radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.15), transparent 70%)',
               width: 'min(90vw, 600px)',
-              maxHeight: '90vh',
+              maxHeight: '85vh',
               left: `${position.x}px`,
               top: `${position.y}px`,
               transform: isDragging ? 'scale(1.02)' : 'scale(1)',
               transition: isDragging ? 'transform 0.1s ease-out' : 'transform 0.3s ease-out, left 0.3s ease-out, top 0.3s ease-out',
-              zIndex: 100
+              zIndex: 110
             }}
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
@@ -131,7 +131,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
             </div>
 
             {/* Content */}
-            <div className="p-5 sm:p-6 relative z-10 cursor-default overflow-y-auto modal-scrollbar" style={{ maxHeight: 'calc(90vh - 80px)' }}>
+            <div className="p-4 sm:p-5 md:p-6 relative z-10 cursor-default overflow-y-auto modal-scrollbar" style={{ maxHeight: 'calc(85vh - 80px)' }}>
               {children}
             </div>
           </motion.div>

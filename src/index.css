@@ -77,6 +77,19 @@
     border: 2px solid transparent;
   }
 
+  /* Ensure modals work well with dynamic headers/footers */
+  @media (max-height: 600px) {
+    .modal-scrollbar {
+      max-height: 70vh !important;
+    }
+  }
+
+  /* Ensure content doesn't get hidden behind fixed headers/footers */
+  .content-safe-area {
+    padding-top: calc(env(safe-area-inset-top) + 1rem);
+    padding-bottom: calc(env(safe-area-inset-bottom) + 1rem);
+  }
+
   .btn-outline {
     @apply btn border border-gray-600 text-gray-300 hover:bg-gray-700 focus:ring-gray-500;
   }
