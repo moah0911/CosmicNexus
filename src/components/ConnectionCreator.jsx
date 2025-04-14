@@ -230,7 +230,7 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
           </div>
 
           {/* Node selection grid */}
-          <div className="max-h-[400px] overflow-y-auto pr-2 space-y-4">
+          <div className="max-h-[300px] md:max-h-[400px] overflow-y-auto pr-2 space-y-4">
             {nodes
               .filter(node => {
                 if (!searchTerm) return true;

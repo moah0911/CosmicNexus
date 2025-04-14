@@ -1,9 +1,18 @@
 import { useEffect, useRef, useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
+import { useDraggable } from '../hooks/useDraggable'
 
 const Modal = ({ isOpen, onClose, title, children }) => {
   const modalRef = useRef(null)
+  const dragHandleRef = useRef(null)
   const [isRendered, setIsRendered] = useState(false)
+  const [isDraggable, setIsDraggable] = useState(false)
+
+  // Initialize draggable functionality
+  const { position, isDragging } = useDraggable(dragHandleRef, {
+    disabled: !isDraggable,
+    bounds: { top: 0, left: 0, right: window.innerWidth, bottom: window.innerHeight }
+  })
 
   // Ensure modal is properly initialized
   useEffect(() => {
@@ -15,7 +24,7 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   // Store scroll position when modal opens
   const scrollY = useRef(0)
 
-  // Handle keyboard events and body scroll
+  // Handle keyboard events without preventing body scroll
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') {
@@ -28,22 +37,13 @@ const Modal = ({ isOpen, onClose, title, children }) => {
       // Store the current scroll position
       scrollY.current = window.scrollY
 
-      // Use a simpler approach - just prevent scrolling on the body
-      // This is more stable and less likely to cause visual glitches
-      document.body.classList.add('overflow-hidden')
+      // We're NOT adding overflow-hidden to body anymore to allow background scrolling
+      // Instead, we'll make the modal itself scrollable
 
       // Add escape key listener
       document.addEventListener('keydown', handleEscape)
 
       return () => {
-        // Remove the overflow-hidden class when modal closes
-        document.body.classList.remove('overflow-hidden')
-
-        // Restore scroll position after a short delay to prevent visual glitches
-        setTimeout(() => {
-          window.scrollTo(0, scrollY.current)
-        }, 0)
-
         // Remove event listener
         document.removeEventListener('keydown', handleEscape)
       }
@@ -69,17 +69,10 @@ const Modal = ({ isOpen, onClose, title, children }) => {
   return (
     <AnimatePresence>
       {isOpen && (
-        <div className="fixed inset-0 z-50 overflow-y-auto">
-          <div className="min-h-screen px-4 text-center">
-            {/* This element is to trick the browser into centering the modal contents. */}
-            <span
-              className="inline-block h-screen align-middle"
-              aria-hidden="true"
-            >
-              &#8203;
-            </span>
+        <div className="fixed inset-0 z-50 overflow-y-auto pointer-events-none">
+          <div className="flex items-center justify-center min-h-screen px-2 sm:px-4 py-4 sm:py-12 pointer-events-none">
             <motion.div
-              className="fixed inset-0 bg-black/70 backdrop-blur-sm"
+              className="fixed inset-0 bg-black/70 backdrop-blur-sm pointer-events-auto"
               onClick={handleBackdropClick}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -90,23 +83,24 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               }}
             />
             <motion.div
-              className="inline-block w-full max-w-2xl my-8 text-left align-middle transition-all transform"
+              className="w-full max-w-xl md:max-w-2xl text-left pointer-events-auto relative z-10"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
-              onClick={handleBackdropClick}
             >
             <motion.div
               ref={modalRef}
-              className="bg-black/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-y-auto relative my-10 text-purple-200"
+              className="bg-black/95 backdrop-blur-md rounded-2xl shadow-2xl w-full max-w-xl md:max-w-2xl max-h-[80vh] overflow-y-auto relative text-purple-200 mx-auto"
               style={{
                 boxShadow: '0 10px 50px rgba(124, 58, 237, 0.5)',
                 WebkitOverflowScrolling: 'touch', // Improve scrolling on iOS
                 msOverflowStyle: 'none', // Hide scrollbars in IE/Edge
                 scrollbarWidth: 'thin', // Thin scrollbars in Firefox
                 border: '1px solid rgba(139, 92, 246, 0.3)',
-                backgroundImage: 'radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.1), transparent 70%)'
+                backgroundImage: 'radial-gradient(circle at 50% 10%, rgba(139, 92, 246, 0.1), transparent 70%)',
+                transform: isDragging ? `translate(${position.x}px, ${position.y}px)` : undefined,
+                transition: isDragging ? 'none' : 'transform 0.3s ease-out'
               }}
               initial={{ scale: 0.9, y: 20, opacity: 0 }}
               animate={{ scale: 1, y: 0, opacity: 1 }}
@@ -123,24 +117,50 @@ const Modal = ({ isOpen, onClose, title, children }) => {
               <div className="absolute -top-3 -left-3 w-16 h-16 rounded-full bg-gradient-to-br from-purple-500/10 to-indigo-500/10 z-0"></div>
               <div className="absolute -bottom-3 -right-3 w-24 h-24 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 z-0"></div>
 
-              <div className="sticky top-0 z-10 flex justify-between items-center p-5 border-b border-purple-800/30 bg-black/95 backdrop-blur-md">
-                <div className="flex items-center">
+              <div
+                ref={dragHandleRef}
+                className="sticky top-0 z-10 flex justify-between items-center p-5 border-b border-purple-800/30 bg-black/95 backdrop-blur-md cursor-move"
+                onMouseEnter={() => setIsDraggable(true)}
+                onMouseLeave={() => setIsDraggable(false)}
+              >
+                <div className="flex items-center overflow-hidden">
                   <div className="w-10 h-10 rounded-full bg-gradient-to-br from-purple-600/20 to-indigo-600/20 flex items-center justify-center mr-3 shadow-md border border-purple-700/30">
                     <i className="bi bi-stars text-purple-400"></i>
                   </div>
-                  <h2 className="text-2xl font-bold text-purple-200">{title}</h2>
+                  <h2 className="text-xl md:text-2xl font-bold text-purple-200 truncate">{title}</h2>
                 </div>
-                <button
-                  onClick={onClose}
-                  className="text-purple-400 hover:text-purple-300 w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-all duration-300 transform hover:rotate-90"
-                  aria-label="Close modal"
-                >
-                  <i className="bi bi-x-lg text-xl"></i>
-                </button>
+                <div className="flex items-center space-x-2 flex-shrink-0">
+                  <div className="hidden sm:flex text-xs text-purple-400 bg-purple-900/30 px-2 py-1 rounded-md border border-purple-700/30">
+                    <i className="bi bi-arrows-move mr-1"></i> Draggable
+                  </div>
+                  <button
+                    onClick={onClose}
+                    className="text-purple-400 hover:text-purple-300 w-10 h-10 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-all duration-300 transform hover:rotate-90"
+                    aria-label="Close modal"
+                  >
+                    <i className="bi bi-x-lg text-xl"></i>
+                  </button>
+                </div>
               </div>
 
-              <div className="p-6 relative z-10">
+              <div className="p-4 sm:p-6 relative z-10">
                 {children}
+              </div>
+
+              {/* Modal controls */}
+              <div className="absolute bottom-2 left-0 right-0 flex justify-center space-x-2">
+                <div className="flex items-center space-x-2 bg-black/60 px-3 py-1 rounded-full border border-purple-700/30">
+                  <div className="hidden sm:block text-xs text-purple-400">
+                    <i className="bi bi-arrows-move mr-1"></i> Drag header to move
+                  </div>
+                  <div className="sm:block hidden w-1 h-4 bg-purple-700/30 rounded-full"></div>
+                  <button
+                    onClick={() => onClose()}
+                    className="text-xs text-purple-400 hover:text-purple-300"
+                  >
+                    <i className="bi bi-x-circle mr-1"></i> Close
+                  </button>
+                </div>
               </div>
             </motion.div>
             </motion.div>
