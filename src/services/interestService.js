@@ -1,7 +1,13 @@
 import { supabase } from '../lib/supabase'
 import { v4 as uuidv4 } from 'uuid'
 import { generateAIConnections } from './geminiService'
-import { refreshSchemaCache } from '../utils/refreshSchemaCache'
+import { 
+  DB_SCHEMA, 
+  getSafeColumns, 
+  addClientFields, 
+  sanitizeForDB, 
+  refreshSchemaCache 
+} from '../utils/schemaUtils'
 
 // Fetch all interest nodes for the current user
 export const fetchInterestNodes = async () => {
@@ -20,8 +26,8 @@ export const fetchInterestNodes = async () => {
 
     console.log("fetchInterestNodes: Querying database for nodes");
     const { data, error } = await supabase
-      .from('interest_nodes')
-      .select('*')
+      .from(DB_SCHEMA.TABLES.INTEREST_NODES)
+      .select(getSafeColumns(DB_SCHEMA.TABLES.INTEREST_NODES))
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -78,7 +84,7 @@ export const createInterestNode = async (nodeData) => {
 
     // Check for duplicate title
     const { data: existingNodes, error: checkError } = await supabase
-      .from('interest_nodes')
+      .from(DB_SCHEMA.TABLES.INTEREST_NODES)
       .select('id, title')
       .eq('user_id', user.id)
       .ilike('title', cleanedData.title)
@@ -93,16 +99,17 @@ export const createInterestNode = async (nodeData) => {
       }
     }
 
+    // Create a sanitized record for the database
+    const nodeRecord = sanitizeForDB(DB_SCHEMA.TABLES.INTEREST_NODES, {
+      id: uuidv4(),
+      user_id: user.id,
+      ...cleanedData
+    });
+
     const { data, error } = await supabase
-      .from('interest_nodes')
-      .insert([
-        {
-          id: uuidv4(),
-          user_id: user.id,
-          ...cleanedData
-        }
-      ])
-      .select()
+      .from(DB_SCHEMA.TABLES.INTEREST_NODES)
+      .insert([nodeRecord])
+      .select(getSafeColumns(DB_SCHEMA.TABLES.INTEREST_NODES))
 
     if (error) throw error
     return { success: true, data: data[0] }
@@ -242,12 +249,11 @@ export const fetchConnections = async () => {
       throw new Error('User not authenticated')
     }
 
-    // Instead of trying to use '*' which might include the problematic is_manual column,
-    // explicitly list all the columns we need except is_manual
-    console.log("fetchConnections: Querying database for connections with explicit columns");
+    // Use our schema utility to get safe columns
+    console.log("fetchConnections: Querying database for connections with safe columns");
     const { data, error } = await supabase
-      .from('connections')
-      .select('id, user_id, source_node_id, target_node_id, description, strength, created_at, updated_at')
+      .from(DB_SCHEMA.TABLES.CONNECTIONS)
+      .select(getSafeColumns(DB_SCHEMA.TABLES.CONNECTIONS))
       .eq('user_id', user.id)
       .order('created_at', { ascending: false });
 
@@ -258,13 +264,10 @@ export const fetchConnections = async () => {
 
     console.log(`fetchConnections: Successfully fetched ${data?.length || 0} connections`);
 
-    // Add the is_manual property to each connection with a default value
-    const connectionsWithManualFlag = (data || []).map(conn => ({
-      ...conn,
-      is_manual: false // Default value as per schema
-    }));
+    // Add client-side fields to the connections
+    const connectionsWithClientFields = addClientFields(DB_SCHEMA.TABLES.CONNECTIONS, data || []);
 
-    return { success: true, data: connectionsWithManualFlag };
+    return { success: true, data: connectionsWithClientFields };
   } catch (error) {
     console.error('Error fetching connections:', error);
     return { success: false, error };
@@ -281,8 +284,8 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
     }
 
     const { data: nodes, error } = await supabase
-      .from('interest_nodes')
-      .select('*')
+      .from(DB_SCHEMA.TABLES.INTEREST_NODES)
+      .select(getSafeColumns(DB_SCHEMA.TABLES.INTEREST_NODES))
       .in('id', selectedNodeIds)
       .eq('user_id', user.id)
 
@@ -294,23 +297,22 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
 
     // Check if this is a manual connection creation
     if (options.manualDescription && selectedNodeIds.length === 2) {
-      // Create a single manual connection without the relationship_type field
-      // to avoid schema cache issues
-      const connectionData = {
+      // Create a sanitized connection record for the database
+      const connectionData = sanitizeForDB(DB_SCHEMA.TABLES.CONNECTIONS, {
         id: uuidv4(),
         user_id: user.id,
         source_node_id: selectedNodeIds[0],
         target_node_id: selectedNodeIds[1],
         description: options.manualDescription,
-        strength: options.strength || 3
-        // Intentionally omitting relationship_type to avoid schema cache issues
-      };
+        strength: options.strength || 3,
+        created_at: new Date().toISOString()
+      });
 
       console.log("generateConnections: Creating manual connection with strength:", options.strength);
 
       try {
         const { error: insertError } = await supabase
-          .from('connections')
+          .from(DB_SCHEMA.TABLES.CONNECTIONS)
           .insert([connectionData])
 
         if (insertError) {
@@ -322,12 +324,11 @@ export const generateConnections = async (selectedNodeIds, options = {}) => {
         throw insertError;
       }
 
-      // Add is_manual and relationship_type for the client-side representation only
+      // Add client-side fields for the frontend
       const manualConnection = {
         ...connectionData,
-        is_manual: true,
         relationship_type: options.relationshipType || 'related',
-        created_at: new Date().toISOString()
+        is_manual: true
       };
 
       return { success: true, connections: [manualConnection] };
@@ -489,10 +490,9 @@ export const deleteConnection = async (id) => {
 
     console.log(`deleteConnection: Deleting connection with id ${id}`);
 
-    // Delete operation doesn't need to reference the is_manual column,
-    // so this should work regardless of schema cache issues
+    // Use the schema constants for consistency
     const { error } = await supabase
-      .from('connections')
+      .from(DB_SCHEMA.TABLES.CONNECTIONS)
       .delete()
       .eq('id', id)
       .eq('user_id', user.id)

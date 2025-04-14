@@ -98,6 +98,13 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
         relationshipType: connectionType
       }
 
+      console.log('Creating connection with options:', {
+        sourceNode: sourceNode.title,
+        targetNode: targetNode.title,
+        strength,
+        connectionType
+      })
+
       // Use the generateConnections service function which handles schema issues
       const { success, connections, error } = await generateConnections(
         [sourceNode.id, targetNode.id],
@@ -109,7 +116,14 @@ const ConnectionCreator = ({ nodes, onConnectionCreated, onCancel }) => {
       }
 
       toast.success('Connection created successfully!')
-      onConnectionCreated(connections[0])
+      
+      // Make sure the connection has the relationship_type for the UI
+      const enhancedConnection = {
+        ...connections[0],
+        relationship_type: connectionType || 'related'
+      }
+      
+      onConnectionCreated(enhancedConnection)
     } catch (error) {
       console.error('Error creating connection:', error)
       toast.error(error.message || 'Failed to create connection')

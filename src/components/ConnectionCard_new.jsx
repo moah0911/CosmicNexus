@@ -53,7 +53,7 @@ const ConnectionCard = ({ connection, sourceNode, targetNode, onDelete }) => {
   // Format relationship type for display
   const formatRelationshipType = (relationshipType) => {
     if (!relationshipType) return 'related'
-    return relationshipType.replace('_', ' ')
+    return relationshipType.replace(/_/g, ' ')
   }
 
   // Animation variants
