@@ -46,15 +46,6 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Check if the email is already registered
-      const { data: { user } } = await supabase.auth.admin
-        .getUserByEmail(email)
-        .catch(() => ({ data: { user: null } }));
-
-      if (user) {
-        throw new Error('Email is already registered');
-      }
-
       // Store the email and password temporarily for later registration
       sessionStorage.setItem('pendingRegistration', JSON.stringify({ email, password }));
 
@@ -133,47 +124,40 @@ export function AuthProvider({ children }) {
         throw new Error('Registration data not found');
       }
 
-      // First, check if the user already exists but is unconfirmed
-      const { data: { user: existingUser } } = await supabase.auth.admin
-        .getUserByEmail(pendingRegistration.email)
-        .catch(() => ({ data: { user: null } }));
-
-      if (existingUser) {
-        // User exists but might be unconfirmed, try to delete it first
-        await supabase.auth.admin
-          .deleteUser(existingUser.id)
-          .catch(err => console.warn('Could not delete existing user:', err));
-      }
-
       // Complete the registration with Supabase
       const { data, error } = await supabase.auth.signUp({
         email: pendingRegistration.email,
         password: pendingRegistration.password,
         options: {
-          // Important: Set this to true to auto-confirm the email
-          emailRedirectTo: undefined,
+          // Skip email verification since we've already verified with OTP
+          emailRedirectTo: `${window.location.origin}/login`,
           data: {
             email_verified: true
           }
         }
       });
 
-      if (error) throw error;
+      if (error) {
+        // If the user already exists, try to sign in
+        if (error.message.includes('already registered')) {
+          console.log('User already exists, attempting to sign in');
+          // Try to sign in to verify the account works
+          const { error: signInError } = await supabase.auth.signInWithPassword({
+            email: pendingRegistration.email,
+            password: pendingRegistration.password
+          });
 
-      // If we have a user and a session, the email is confirmed
-      if (data?.user) {
-        // Force confirm the email if needed
-        try {
-          // This is an admin operation that might not be available
-          await supabase.auth.admin.updateUserById(
-            data.user.id,
-            { email_confirm: true }
-          );
-        } catch (adminError) {
-          console.warn('Could not use admin API to confirm email:', adminError);
-          // Continue anyway, we'll try another approach
+          if (signInError) {
+            console.warn('Sign-in failed:', signInError);
+            throw signInError;
+          } else {
+            // Sign out so the user can sign in manually
+            await supabase.auth.signOut();
+          }
+        } else {
+          throw error;
         }
-
+      } else if (data?.user) {
         // Try to sign in immediately to confirm the account works
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: pendingRegistration.email,
