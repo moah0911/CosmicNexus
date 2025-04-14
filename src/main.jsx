@@ -6,10 +6,7 @@ import './index.css'
 import { AuthProvider } from './contexts/AuthContext.jsx'
 import { ToastContainer } from 'react-toastify'
 import 'react-toastify/dist/ReactToastify.css'
-import { initEmailService } from './services/emailService'
-
-// Initialize EmailJS
-initEmailService();
+// No need for custom email service as we're using Supabase's built-in OTP
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>

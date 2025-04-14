@@ -40,12 +40,15 @@ const Login = () => {
     setLoading(true)
 
     try {
-      const { success, error } = await signIn(email, password)
+      const { success, needsVerification, email: userEmail, error } = await signIn(email, password)
 
       if (success) {
         navigate('/dashboard')
+      } else if (needsVerification) {
+        // If the user needs to verify their email, redirect to the OTP verification page
+        navigate('/verify-otp', { state: { email: userEmail || email } })
       } else {
-        setError(error.message || 'Failed to sign in')
+        setError(error?.message || 'Failed to sign in')
       }
     } catch (err) {
       setError('An unexpected error occurred')

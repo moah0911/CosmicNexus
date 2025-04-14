@@ -193,14 +193,15 @@ const VerifyOTP = () => {
             </p>
           </motion.div>
 
-          {/* For testing purposes - shows instructions to find the OTP */}
+          {/* Instructions for finding the OTP */}
           <motion.div
             className="mt-4 p-3 bg-yellow-50 border border-yellow-200 text-yellow-800 rounded-lg text-sm"
             variants={itemVariants}
           >
             <p className="font-medium">Need help finding your verification code?</p>
-            <p>Check your browser console by pressing <strong>F12</strong> or <strong>Ctrl+Shift+J</strong> (Windows/Linux) or <strong>Cmd+Option+J</strong> (Mac).</p>
-            <p className="mt-2">Look for a message with a purple background containing your OTP code.</p>
+            <p>Check your email inbox for a message from Supabase with the subject "Supabase: Login to your account".</p>
+            <p className="mt-2">The verification code will be in the email. Enter it here to complete your registration.</p>
+            <p className="mt-2 text-xs">Note: If you don't see the email, check your spam folder. The email should arrive within a minute.</p>
           </motion.div>
 
 

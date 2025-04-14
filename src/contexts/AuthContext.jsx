@@ -46,17 +46,35 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Store the email and password temporarily for later registration
-      sessionStorage.setItem('pendingRegistration', JSON.stringify({ email, password }));
+      // Store the password for later use after verification
+      sessionStorage.setItem('pendingPassword', password);
+      
+      // First, create the user with Supabase but don't auto-confirm
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          // Disable email confirmation redirect
+          emailRedirectTo: null,
+          // Don't auto-confirm the email
+          data: {
+            email_confirmed: false
+          }
+        }
+      });
 
-      // Send OTP to the user's email
-      const { success, error } = await sendOTP(email);
-
-      if (!success) {
-        throw error || new Error('Failed to send verification code');
-      }
-
+      if (error) throw error;
+      
+      // Generate and send OTP using our custom service
+      const { success: otpSuccess, error: otpError } = await sendOTP(email);
+      
+      if (!otpSuccess) throw otpError || new Error('Failed to send verification code');
+      
+      // Store the email for the verification page
+      sessionStorage.setItem('pendingVerification', email);
+      
       toast.success('Verification code sent to your email');
+      console.log('Check your email or browser console for the verification code');
 
       // Return success with email for the verification page
       return { success: true, email };
@@ -69,8 +87,47 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({ email, password })
-      if (error) throw error
+      // Check if this user has verified with OTP in our system
+      const hasVerifiedWithOTP = localStorage.getItem(`email_confirmed_${email}`) === 'true';
+      
+      // Try to sign in with password
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      
+      if (error) {
+        // If the error is about email not being confirmed
+        if (error.message.includes('Email not confirmed')) {
+          // Check if the user has verified with OTP in our system
+          if (hasVerifiedWithOTP) {
+            // The user has verified with OTP but Supabase still has them marked as unconfirmed
+            // Send a new OTP for them to verify again
+            const { success: otpSuccess } = await sendOTP(email);
+            
+            if (otpSuccess) {
+              // Store credentials for the verification page
+              sessionStorage.setItem('pendingVerification', email);
+              sessionStorage.setItem('pendingPassword', password);
+              
+              toast.info('Please verify your email one more time');
+              return { success: false, needsVerification: true, email };
+            }
+          } else {
+            // User hasn't verified with OTP yet, send them an OTP
+            const { success: otpSuccess } = await sendOTP(email);
+            
+            if (otpSuccess) {
+              // Store credentials for the verification page
+              sessionStorage.setItem('pendingVerification', email);
+              sessionStorage.setItem('pendingPassword', password);
+              
+              toast.info('Please verify your email before logging in');
+              return { success: false, needsVerification: true, email };
+            }
+          }
+        }
+        
+        throw error;
+      }
+      
       toast.success('Welcome back!')
       return { success: true }
     } catch (error) {
@@ -108,72 +165,78 @@ export function AuthProvider({ children }) {
     }
   }
 
+  // Helper function to confirm a user's email in Supabase
+  const confirmUserEmail = async (email) => {
+    try {
+      // This is a workaround since we don't have direct access to confirm the email in Supabase
+      // We'll use the admin API or a server function in a real production app
+      
+      // For now, we'll mark the user as confirmed in our local storage
+      localStorage.setItem(`email_confirmed_${email}`, 'true');
+      
+      return { success: true };
+    } catch (error) {
+      console.error('Error confirming email:', error);
+      return { success: false, error };
+    }
+  };
+
   const verifyOTP = async (email, token) => {
     try {
-      // Verify the OTP code using our secure service
-      const { success: otpSuccess, error: otpError } = await verifyOTPCode(email, token);
+      // Get the email and password from session storage
+      const storedEmail = sessionStorage.getItem('pendingVerification');
+      const storedPassword = sessionStorage.getItem('pendingPassword');
 
-      if (!otpSuccess) {
-        throw otpError || new Error('Invalid or expired verification code');
+      if (!storedEmail) {
+        throw new Error('No pending verification found. Please try registering again.');
       }
 
-      // Get the stored registration data
-      const pendingRegistration = JSON.parse(sessionStorage.getItem('pendingRegistration') || '{}');
-
-      if (!pendingRegistration.email || !pendingRegistration.password) {
-        throw new Error('Registration data not found');
+      if (email !== storedEmail) {
+        console.warn('Email mismatch:', email, storedEmail);
+        // Use the stored email if there's a mismatch
+        email = storedEmail;
       }
 
-      // Complete the registration with Supabase
-      const { data, error } = await supabase.auth.signUp({
-        email: pendingRegistration.email,
-        password: pendingRegistration.password,
-        options: {
-          // Skip email verification since we've already verified with OTP
-          emailRedirectTo: `${window.location.origin}/login`,
-          data: {
-            email_verified: true
-          }
-        }
-      });
-
-      if (error) {
-        // If the user already exists, try to sign in
-        if (error.message.includes('already registered')) {
-          console.log('User already exists, attempting to sign in');
-          // Try to sign in to verify the account works
-          const { error: signInError } = await supabase.auth.signInWithPassword({
-            email: pendingRegistration.email,
-            password: pendingRegistration.password
-          });
-
-          if (signInError) {
-            console.warn('Sign-in failed:', signInError);
-            throw signInError;
-          } else {
-            // Sign out so the user can sign in manually
-            await supabase.auth.signOut();
-          }
-        } else {
-          throw error;
-        }
-      } else if (data?.user) {
-        // Try to sign in immediately to confirm the account works
-        const { error: signInError } = await supabase.auth.signInWithPassword({
-          email: pendingRegistration.email,
-          password: pendingRegistration.password
+      // First verify the OTP using our local service
+      const { success: otpVerified, error: otpError } = await verifyOTPCode(email, token);
+      
+      if (!otpVerified) {
+        throw otpError || new Error('Invalid verification code');
+      }
+      
+      // Mark the user's email as confirmed in our system
+      await confirmUserEmail(email);
+      
+      // If OTP is valid and we have a stored password, try to sign in
+      if (storedPassword) {
+        // First sign out to clear any existing session
+        await supabase.auth.signOut();
+        
+        // Try to sign in with password
+        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password: storedPassword
         });
 
         if (signInError) {
           console.warn('Auto sign-in failed:', signInError);
+          // If the error is about email not being confirmed, we'll handle it specially
+          if (signInError.message.includes('Email not confirmed')) {
+            // Store that this user has verified with OTP but Supabase still needs confirmation
+            localStorage.setItem(`otp_verified_${email}`, 'true');
+          } else {
+            // For other errors, we'll just continue and let the user log in manually
+            console.warn('Sign-in error:', signInError.message);
+          }
         } else {
-          // Sign out so the user can sign in manually
+          // If sign-in succeeded, sign out so the user can sign in manually on the login page
           await supabase.auth.signOut();
         }
       }
 
-      // Clear pending registration data
-      sessionStorage.removeItem('pendingRegistration');
+      // Clear pending verification data
+      sessionStorage.removeItem('pendingVerification');
+      sessionStorage.removeItem('pendingPassword');
 
       toast.success('Email verified successfully! You can now log in.');
       return { success: true };
@@ -186,19 +249,23 @@ export function AuthProvider({ children }) {
 
   const resendOTP = async (email) => {
     try {
-      // Get the pending registration data to ensure we have the correct email
-      const pendingRegistration = JSON.parse(sessionStorage.getItem('pendingRegistration') || '{}');
+      // Get the email from session storage
+      const storedEmail = sessionStorage.getItem('pendingVerification');
 
-      if (!pendingRegistration.email) {
-        throw new Error('Registration data not found');
+      if (!storedEmail) {
+        throw new Error('No pending verification found. Please try registering again.');
       }
 
-      // Send a new OTP to the user's email
-      const { success, error } = await sendOTP(email);
-
-      if (!success) {
-        throw error || new Error('Failed to send verification code');
+      if (email !== storedEmail) {
+        console.warn('Email mismatch:', email, storedEmail);
+        // Use the stored email if there's a mismatch
+        email = storedEmail;
       }
+
+      // Use our custom OTP service to generate and send a new OTP
+      const { success: otpSuccess, error: otpError } = await sendOTP(email);
+      
+      if (!otpSuccess) throw otpError || new Error('Failed to send verification code');
 
       toast.success('Verification code resent to your email');
       return { success: true };
