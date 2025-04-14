@@ -109,9 +109,8 @@ const Register = () => {
       console.log('Sign up result:', result);
 
       if (result.success) {
-        // Redirect to OTP verification page with email
-        console.log('Redirecting to OTP verification page with email:', result.email || email);
-        navigate('/verify-otp', { state: { email: result.email || email } });
+        // Show success message and redirect to login page
+        navigate('/registration-success');
       } else {
         setError(result.error?.message || 'Failed to create account');
       }

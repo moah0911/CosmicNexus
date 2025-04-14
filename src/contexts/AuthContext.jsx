@@ -1,13 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react'
 import { supabase } from '../lib/supabase'
 import { toast } from 'react-toastify'
-import { sendOTP, verifyOTP as verifyOTPCode } from '../services/otpService'
-
-// For debugging
-console.log('AuthContext loaded, otpService functions available:', {
-  sendOTP: typeof sendOTP === 'function',
-  verifyOTPCode: typeof verifyOTPCode === 'function'
-});
 
 const AuthContext = createContext()
 
@@ -52,21 +45,23 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Store the email and password for later use after verification
-      sessionStorage.setItem('pendingVerification', email);
-      sessionStorage.setItem('pendingPassword', password);
-      
-      // Generate and send OTP using our custom service
-      // This happens BEFORE creating the user in Supabase
-      const { success: otpSuccess, error: otpError } = await sendOTP(email);
-      
-      if (!otpSuccess) throw otpError || new Error('Failed to send verification code');
-      
-      toast.success('Verification code sent to your email');
-      console.log('Check your email or browser console for the verification code');
+      // Create the user with Supabase and let it handle email confirmation
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          // Get the current site URL (works in both development and production)
+          emailRedirectTo: `${window.location.origin}/auth/callback`
+        }
+      });
 
-      // Return success with email for the verification page
-      return { success: true, email };
+      if (error) throw error;
+      
+      toast.success('Confirmation email sent. Please check your inbox.');
+      console.log('Check your email for the confirmation link from Supabase');
+
+      // Return success
+      return { success: true };
     } catch (error) {
       console.error('Sign up error:', error);
       toast.error(error.message || 'Registration failed');
@@ -76,42 +71,15 @@ export function AuthProvider({ children }) {
 
   const signIn = async (email, password) => {
     try {
-      // Check if this user has verified with OTP in our system
-      const hasVerifiedWithOTP = localStorage.getItem(`email_confirmed_${email}`) === 'true';
-      
       // Try to sign in with password
       const { error } = await supabase.auth.signInWithPassword({ email, password });
       
       if (error) {
         // If the error is about email not being confirmed
         if (error.message.includes('Email not confirmed')) {
-          // Check if the user has verified with OTP in our system
-          if (hasVerifiedWithOTP) {
-            // The user has verified with OTP but Supabase still has them marked as unconfirmed
-            // Send a new OTP for them to verify again
-            const { success: otpSuccess } = await sendOTP(email);
-            
-            if (otpSuccess) {
-              // Store credentials for the verification page
-              sessionStorage.setItem('pendingVerification', email);
-              sessionStorage.setItem('pendingPassword', password);
-              
-              toast.info('Please verify your email one more time');
-              return { success: false, needsVerification: true, email };
-            }
-          } else {
-            // User hasn't verified with OTP yet, send them an OTP
-            const { success: otpSuccess } = await sendOTP(email);
-            
-            if (otpSuccess) {
-              // Store credentials for the verification page
-              sessionStorage.setItem('pendingVerification', email);
-              sessionStorage.setItem('pendingPassword', password);
-              
-              toast.info('Please verify your email before logging in');
-              return { success: false, needsVerification: true, email };
-            }
-          }
+          // Inform the user they need to confirm their email
+          toast.info('Please check your email for a confirmation link');
+          return { success: false, emailNotConfirmed: true, error };
         }
         
         throw error;
@@ -264,9 +232,7 @@ export function AuthProvider({ children }) {
     signUp,
     signIn,
     signOut,
-    resetPassword,
-    verifyOTP,
-    resendOTP
+    resetPassword
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

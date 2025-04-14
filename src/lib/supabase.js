@@ -21,12 +21,10 @@ export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
     persistSession: true,
     detectSessionInUrl: true,
     flowType: 'pkce',
-    // Set the site URL to the deployed URL or localhost for development
+    // Set the site URL to the current origin (works in both development and production)
     site: window.location.origin,
-    // Explicitly set to null to disable redirects
-    redirectTo: null,
-    // Disable auto confirmation of emails to allow OTP verification
-    shouldCreateUser: false
+    // Set the redirect URL for email confirmations
+    redirectTo: `${window.location.origin}/auth/callback`
   }
 })
 

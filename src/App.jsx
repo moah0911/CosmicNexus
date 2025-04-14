@@ -12,6 +12,7 @@ import CosmicExplorer from './pages/CosmicExplorer'
 import AuthRedirectHandler from './components/AuthRedirectHandler'
 import AuthCallback from './pages/AuthCallback'
 import VerifyOTP from './pages/VerifyOTP'
+import RegistrationSuccess from './pages/RegistrationSuccess'
 
 function App() {
   const { user, loading } = useAuth()
@@ -58,6 +59,7 @@ function App() {
           <Route index element={<Home />} />
           <Route path="login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
           <Route path="register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
+          <Route path="registration-success" element={!user ? <RegistrationSuccess /> : <Navigate to="/dashboard" />} />
           <Route path="verify-otp" element={!user ? <VerifyOTP /> : <Navigate to="/dashboard" />} />
 
           {/* Protected Routes */}
