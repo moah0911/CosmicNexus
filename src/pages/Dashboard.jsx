@@ -159,8 +159,11 @@ const Dashboard = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <div className="p-6 rounded-xl bg-black/40 border border-purple-800/30 hover:border-purple-700/50 transition-all duration-300 relative overflow-hidden"
-          style={{ boxShadow: '0 0 20px rgba(147, 51, 234, 0.1)' }}>
+        <Link to="/map" className="block p-6 rounded-xl bg-black/40 border border-purple-800/30 hover:border-purple-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
+          style={{ boxShadow: '0 0 20px rgba(147, 51, 234, 0.1)' }}
+          onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.25)'}
+          onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(147, 51, 234, 0.1)'}>
+
           {/* Subtle animated glow */}
           <div className="absolute -inset-1 bg-gradient-to-r from-purple-900/10 to-indigo-900/10 rounded-xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
 
@@ -180,16 +183,14 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <div className="mt-4">
-            <Link to="/map" className="text-purple-400 hover:text-purple-300 text-sm font-medium flex items-center group cursor-pointer">
-              <span>Explore Your Nodes</span>
-              <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
-            </Link>
-          </div>
-        </div>
 
-        <div className="p-6 rounded-xl bg-black/40 border border-indigo-800/30 hover:border-indigo-700/50 transition-all duration-300 relative overflow-hidden"
-          style={{ boxShadow: '0 0 20px rgba(99, 102, 241, 0.1)' }}>
+        </Link>
+
+        <Link to="/connections" className="block p-6 rounded-xl bg-black/40 border border-indigo-800/30 hover:border-indigo-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
+          style={{ boxShadow: '0 0 20px rgba(99, 102, 241, 0.1)' }}
+          onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(99, 102, 241, 0.25)'}
+          onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.1)'}>
+
           {/* Subtle animated glow */}
           <div className="absolute -inset-1 bg-gradient-to-r from-indigo-900/10 to-blue-900/10 rounded-xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
 
@@ -209,16 +210,14 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <div className="mt-4">
-            <Link to="/connections" className="text-indigo-400 hover:text-indigo-300 text-sm font-medium flex items-center group cursor-pointer">
-              <span>View Connections</span>
-              <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
-            </Link>
-          </div>
-        </div>
 
-        <div className="p-6 rounded-xl bg-black/40 border border-blue-800/30 hover:border-blue-700/50 transition-all duration-300 relative overflow-hidden"
-          style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' }}>
+        </Link>
+
+        <Link to="/insights-landing" className="block p-6 rounded-xl bg-black/40 border border-blue-800/30 hover:border-blue-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
+          style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' }}
+          onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(59, 130, 246, 0.25)'}
+          onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.1)'}>
+
           {/* Subtle animated glow */}
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-900/10 to-cyan-900/10 rounded-xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
 
@@ -238,13 +237,8 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-          <div className="mt-4">
-            <Link to="/insights-landing" className="text-blue-400 hover:text-blue-300 text-sm font-medium flex items-center group cursor-pointer">
-              <span>Generate New Insights</span>
-              <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
-            </Link>
-          </div>
-        </div>
+
+        </Link>
       </div>
 
       {/* Recent Interests */}
