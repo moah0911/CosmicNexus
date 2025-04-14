@@ -56,7 +56,7 @@ export function AuthProvider({ children }) {
       });
 
       if (error) throw error;
-      
+
       toast.success('Confirmation email sent. Please check your inbox.');
       console.log('Check your email for the confirmation link from Supabase');
 
@@ -73,7 +73,7 @@ export function AuthProvider({ children }) {
     try {
       // Try to sign in with password
       const { error } = await supabase.auth.signInWithPassword({ email, password });
-      
+
       if (error) {
         // If the error is about email not being confirmed
         if (error.message.includes('Email not confirmed')) {
@@ -81,10 +81,10 @@ export function AuthProvider({ children }) {
           toast.info('Please check your email for a confirmation link');
           return { success: false, emailNotConfirmed: true, error };
         }
-        
+
         throw error;
       }
-      
+
       toast.success('Welcome back!')
       return { success: true }
     } catch (error) {
@@ -111,7 +111,7 @@ export function AuthProvider({ children }) {
       const siteUrl = window.location.origin;
 
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${siteUrl}/auth/callback`,
+        redirectTo: `${siteUrl}/reset-password`,
       })
       if (error) throw error
       toast.success('Password reset email sent')

@@ -13,6 +13,7 @@ import AuthRedirectHandler from './components/AuthRedirectHandler'
 import AuthCallback from './pages/AuthCallback'
 import RegistrationSuccess from './pages/RegistrationSuccess'
 import ForgotPassword from './pages/ForgotPassword'
+import ResetPassword from './pages/ResetPassword'
 
 function App() {
   const { user, loading } = useAuth()
@@ -60,6 +61,7 @@ function App() {
           <Route path="login" element={!user ? <Login /> : <Navigate to="/dashboard" />} />
           <Route path="register" element={!user ? <Register /> : <Navigate to="/dashboard" />} />
           <Route path="forgot-password" element={!user ? <ForgotPassword /> : <Navigate to="/dashboard" />} />
+          <Route path="reset-password" element={<ResetPassword />} />
           <Route path="registration-success" element={!user ? <RegistrationSuccess /> : <Navigate to="/dashboard" />} />
 
           {/* Protected Routes */}
