@@ -199,9 +199,9 @@ const VerifyOTP = () => {
             variants={itemVariants}
           >
             <p className="font-medium">Need help finding your verification code?</p>
-            <p>Check your email inbox for a message from Supabase with the subject "Supabase: Login to your account".</p>
-            <p className="mt-2">The verification code will be in the email. Enter it here to complete your registration.</p>
-            <p className="mt-2 text-xs">Note: If you don't see the email, check your spam folder. The email should arrive within a minute.</p>
+            <p>For testing purposes, the verification code is displayed in your browser's console.</p>
+            <p className="mt-2">Open your browser's developer tools (F12 or right-click → Inspect) and look for a message with your OTP code.</p>
+            <p className="mt-2 text-xs">You'll see a message like: "🔑 YOUR OTP CODE IS: 123456 🔑"</p>
           </motion.div>
 
 

@@ -3,6 +3,12 @@ import { supabase } from '../lib/supabase'
 import { toast } from 'react-toastify'
 import { sendOTP, verifyOTP as verifyOTPCode } from '../services/otpService'
 
+// For debugging
+console.log('AuthContext loaded, otpService functions available:', {
+  sendOTP: typeof sendOTP === 'function',
+  verifyOTPCode: typeof verifyOTPCode === 'function'
+});
+
 const AuthContext = createContext()
 
 // Define the hook as a named function declaration but don't export it directly
@@ -46,32 +52,15 @@ export function AuthProvider({ children }) {
 
   const signUp = async (email, password) => {
     try {
-      // Store the password for later use after verification
+      // Store the email and password for later use after verification
+      sessionStorage.setItem('pendingVerification', email);
       sessionStorage.setItem('pendingPassword', password);
       
-      // First, create the user with Supabase but don't auto-confirm
-      const { data, error } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          // Disable email confirmation redirect
-          emailRedirectTo: null,
-          // Don't auto-confirm the email
-          data: {
-            email_confirmed: false
-          }
-        }
-      });
-
-      if (error) throw error;
-      
       // Generate and send OTP using our custom service
+      // This happens BEFORE creating the user in Supabase
       const { success: otpSuccess, error: otpError } = await sendOTP(email);
       
       if (!otpSuccess) throw otpError || new Error('Failed to send verification code');
-      
-      // Store the email for the verification page
-      sessionStorage.setItem('pendingVerification', email);
       
       toast.success('Verification code sent to your email');
       console.log('Check your email or browser console for the verification code');
@@ -187,7 +176,7 @@ export function AuthProvider({ children }) {
       const storedEmail = sessionStorage.getItem('pendingVerification');
       const storedPassword = sessionStorage.getItem('pendingPassword');
 
-      if (!storedEmail) {
+      if (!storedEmail || !storedPassword) {
         throw new Error('No pending verification found. Please try registering again.');
       }
 
@@ -207,33 +196,26 @@ export function AuthProvider({ children }) {
       // Mark the user's email as confirmed in our system
       await confirmUserEmail(email);
       
-      // If OTP is valid and we have a stored password, try to sign in
-      if (storedPassword) {
-        // First sign out to clear any existing session
-        await supabase.auth.signOut();
-        
-        // Try to sign in with password
-        const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-          email,
-          password: storedPassword
-        });
-
-        if (signInError) {
-          console.warn('Auto sign-in failed:', signInError);
-          // If the error is about email not being confirmed, we'll handle it specially
-          if (signInError.message.includes('Email not confirmed')) {
-            // Store that this user has verified with OTP but Supabase still needs confirmation
-            localStorage.setItem(`otp_verified_${email}`, 'true');
-          } else {
-            // For other errors, we'll just continue and let the user log in manually
-            console.warn('Sign-in error:', signInError.message);
+      // Now that OTP is verified, create the user in Supabase
+      // We set emailConfirm: false to prevent Supabase from sending a confirmation email
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password: storedPassword,
+        options: {
+          emailRedirectTo: null,
+          data: {
+            email_confirmed: true // Mark as confirmed in user metadata
           }
-        } else {
-          // If sign-in succeeded, sign out so the user can sign in manually on the login page
-          await supabase.auth.signOut();
+        }
+      });
+      
+      if (error) {
+        // If the user already exists, that's fine
+        if (!error.message.includes('User already registered')) {
+          throw error;
         }
       }
-
+      
       // Clear pending verification data
       sessionStorage.removeItem('pendingVerification');
       sessionStorage.removeItem('pendingPassword');
