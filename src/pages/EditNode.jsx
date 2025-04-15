@@ -1,22 +1,57 @@
-import { useState } from 'react';
-import { useNavigate, Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { toast } from 'react-toastify';
-import { createInterestNode } from '../services/interestService';
+import { fetchInterestNodeById, updateInterestNode } from '../services/interestService';
 import { CATEGORY_DISPLAY } from '../models/CosmicTypes';
 
-const CreateNode = () => {
+const EditNode = () => {
+  const { nodeId } = useParams();
   const navigate = useNavigate();
   
   // Form state
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('other');
+  const [category, setCategory] = useState('');
   const [notes, setNotes] = useState('');
   
   // UI state
+  const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
-  const [showAdvanced, setShowAdvanced] = useState(false);
+  const [originalNode, setOriginalNode] = useState(null);
+
+  // Load node data on component mount
+  useEffect(() => {
+    if (nodeId) {
+      loadNodeData();
+    }
+  }, [nodeId]);
+
+  // Load node data from API
+  const loadNodeData = async () => {
+    try {
+      setLoading(true);
+      
+      const { success, data, error } = await fetchInterestNodeById(nodeId);
+
+      if (success && data) {
+        setOriginalNode(data);
+        setTitle(data.title || '');
+        setDescription(data.description || '');
+        setCategory(data.category || 'other');
+        setNotes(data.notes || '');
+      } else {
+        toast.error(error?.message || 'Failed to load node data');
+        navigate('/cosmic-discoveries');
+      }
+    } catch (error) {
+      console.error('Error loading node data:', error);
+      toast.error('An unexpected error occurred');
+      navigate('/cosmic-discoveries');
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Handle form submission
   const handleSubmit = async (e) => {
@@ -43,32 +78,76 @@ const CreateNode = () => {
         notes: notes.trim()
       };
       
-      const { success, data, error } = await createInterestNode(nodeData);
+      const { success, error } = await updateInterestNode(nodeId, nodeData);
       
       if (success) {
-        toast.success('Knowledge node created successfully');
-        navigate(`/node/${data.id}`);
+        toast.success('Knowledge node updated successfully');
+        navigate(`/node/${nodeId}`);
       } else {
-        toast.error(error?.message || 'Failed to create node');
+        toast.error(error?.message || 'Failed to update node');
       }
     } catch (error) {
-      console.error('Error creating node:', error);
+      console.error('Error updating node:', error);
       toast.error('An unexpected error occurred');
     } finally {
       setSubmitting(false);
     }
   };
 
+  // Check if form has been modified
+  const isFormModified = () => {
+    if (!originalNode) return false;
+    
+    return (
+      title !== originalNode.title ||
+      description !== originalNode.description ||
+      category !== originalNode.category ||
+      notes !== originalNode.notes
+    );
+  };
+
+  // Handle cancel
+  const handleCancel = () => {
+    if (isFormModified()) {
+      if (window.confirm('You have unsaved changes. Are you sure you want to cancel?')) {
+        navigate(`/node/${nodeId}`);
+      }
+    } else {
+      navigate(`/node/${nodeId}`);
+    }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-800 to-indigo-800 flex items-center justify-center text-white mb-4 relative overflow-hidden"
+            style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.5)' }}>
+            <i className="bi bi-diagram-3 text-2xl relative z-10"></i>
+            <div className="absolute inset-0 bg-purple-500 opacity-0 animate-pulse"
+              style={{
+                animationDuration: '3s',
+                boxShadow: 'inset 0 0 20px rgba(192, 132, 252, 0.5)'
+              }}>
+            </div>
+          </div>
+          <h2 className="text-xl font-medium text-purple-200">Loading node data...</h2>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-4xl mx-auto">
       {/* Back button */}
       <div className="mb-6">
         <Link
-          to="/cosmic-discoveries"
+          to={`/node/${nodeId}`}
           className="inline-flex items-center text-purple-300 hover:text-purple-200 transition-colors duration-300"
         >
           <i className="bi bi-arrow-left mr-2"></i>
-          <span>Back to Discoveries</span>
+          <span>Back to Node Details</span>
         </Link>
       </div>
 
@@ -84,7 +163,7 @@ const CreateNode = () => {
             letterSpacing: '0.05em'
           }}
         >
-          Create Knowledge Node
+          Edit Knowledge Node
         </motion.h1>
         <motion.p 
           className="text-purple-300 text-lg max-w-3xl"
@@ -96,7 +175,7 @@ const CreateNode = () => {
             lineHeight: '1.6'
           }}
         >
-          Add a new knowledge node to your cosmic universe. Knowledge nodes represent ideas, concepts, or areas of interest that you want to explore and connect.
+          Update the details of your knowledge node to refine your cosmic universe.
         </motion.p>
       </div>
 
@@ -124,9 +203,6 @@ const CreateNode = () => {
                 placeholder="Enter a title for your knowledge node"
                 required
               />
-              <p className="mt-2 text-purple-400 text-sm">
-                Choose a clear, concise title that represents this concept or idea.
-              </p>
             </div>
 
             {/* Category */}
@@ -134,28 +210,16 @@ const CreateNode = () => {
               <label htmlFor="category" className="block text-base font-medium text-white mb-2">
                 Category
               </label>
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3 mb-3">
-                {Object.entries(CATEGORY_DISPLAY).map(([key, { name, icon }]) => (
-                  <div
-                    key={key}
-                    onClick={() => setCategory(key)}
-                    className={`p-3 rounded-xl cursor-pointer transition-all duration-300 flex flex-col items-center ${
-                      category === key
-                        ? 'bg-purple-900/40 border-2 border-purple-600/70'
-                        : 'bg-black/60 border border-purple-800/30 hover:border-purple-700/50'
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white mb-2 ${
-                      category === key
-                        ? 'bg-gradient-to-br from-purple-600 to-indigo-600'
-                        : 'bg-gradient-to-br from-purple-800 to-indigo-800'
-                    }`}>
-                      <i className={`bi ${icon} text-lg`}></i>
-                    </div>
-                    <span className="text-sm text-center text-purple-200">{name}</span>
-                  </div>
+              <select
+                id="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                className="w-full px-5 py-3 rounded-xl border-2 border-purple-700 focus:border-purple-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
+              >
+                {Object.entries(CATEGORY_DISPLAY).map(([key, { name }]) => (
+                  <option key={key} value={key}>{name}</option>
                 ))}
-              </div>
+              </select>
             </div>
 
             {/* Description */}
@@ -172,57 +236,37 @@ const CreateNode = () => {
                 placeholder="Describe this knowledge node in detail"
                 required
               ></textarea>
-              <p className="mt-2 text-purple-400 text-sm">
-                Provide a detailed description of this concept, idea, or area of interest.
-              </p>
             </div>
 
-            {/* Advanced Options Toggle */}
+            {/* Notes */}
             <div className="mb-6">
-              <button
-                type="button"
-                onClick={() => setShowAdvanced(!showAdvanced)}
-                className="flex items-center text-purple-300 hover:text-purple-200 transition-colors duration-300"
-              >
-                <i className={`bi ${showAdvanced ? 'bi-chevron-down' : 'bi-chevron-right'} mr-2`}></i>
-                <span>Advanced Options</span>
-              </button>
+              <label htmlFor="notes" className="block text-base font-medium text-white mb-2">
+                Personal Notes
+              </label>
+              <textarea
+                id="notes"
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                rows="4"
+                className="w-full px-5 py-3 rounded-xl border-2 border-purple-700 focus:border-purple-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
+                placeholder="Add any personal notes or thoughts about this node (optional)"
+              ></textarea>
             </div>
-
-            {/* Advanced Options */}
-            {showAdvanced && (
-              <div className="mb-6 bg-black/60 p-5 rounded-xl border border-purple-800/30">
-                <div className="mb-6">
-                  <label htmlFor="notes" className="block text-base font-medium text-white mb-2">
-                    Personal Notes
-                  </label>
-                  <textarea
-                    id="notes"
-                    value={notes}
-                    onChange={(e) => setNotes(e.target.value)}
-                    rows="4"
-                    className="w-full px-5 py-3 rounded-xl border-2 border-purple-700 focus:border-purple-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
-                    placeholder="Add any personal notes or thoughts about this node (optional)"
-                  ></textarea>
-                  <p className="mt-2 text-purple-400 text-sm">
-                    These notes are for your personal reference and won't be used for generating insights.
-                  </p>
-                </div>
-              </div>
-            )}
 
             {/* Action Buttons */}
             <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4 mt-8 pt-6 border-t border-purple-800/30">
-              <Link
-                to="/cosmic-discoveries"
+              <button
+                type="button"
+                onClick={handleCancel}
                 className="px-6 py-3 rounded-xl border-2 border-purple-600 text-purple-300 hover:bg-purple-900/30 transition-all duration-300 text-center"
+                disabled={submitting}
               >
                 <i className="bi bi-x-circle mr-2"></i> Cancel
-              </Link>
+              </button>
               
               <button
                 type="submit"
-                disabled={submitting || !title.trim() || !description.trim()}
+                disabled={submitting || !isFormModified()}
                 className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-purple-600 hover:to-indigo-600 cursor-pointer text-center relative overflow-hidden group"
                 style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
               >
@@ -231,12 +275,12 @@ const CreateNode = () => {
                   {submitting ? (
                     <>
                       <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
-                      Creating Node...
+                      Updating Node...
                     </>
                   ) : (
                     <>
-                      <i className="bi bi-plus-circle mr-2"></i>
-                      Create Node
+                      <i className="bi bi-check-circle mr-2"></i>
+                      Update Node
                     </>
                   )}
                 </div>
@@ -245,37 +289,8 @@ const CreateNode = () => {
           </form>
         </div>
       </motion.div>
-
-      {/* Tips */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, delay: 0.3 }}
-        className="mt-8 bg-black/40 backdrop-blur-md rounded-xl border border-purple-900/50 p-5 shadow-lg"
-        style={{ boxShadow: '0 10px 40px rgba(124, 58, 237, 0.1)' }}
-      >
-        <h2 className="text-lg font-bold text-purple-200 mb-3">Tips for Creating Effective Nodes</h2>
-        <ul className="space-y-2 text-purple-300 text-sm">
-          <li className="flex items-start">
-            <i className="bi bi-check-circle text-purple-400 mr-2 mt-1"></i>
-            <span>Be specific and focused in your node titles and descriptions</span>
-          </li>
-          <li className="flex items-start">
-            <i className="bi bi-check-circle text-purple-400 mr-2 mt-1"></i>
-            <span>Include key concepts, ideas, and relevant details in your descriptions</span>
-          </li>
-          <li className="flex items-start">
-            <i className="bi bi-check-circle text-purple-400 mr-2 mt-1"></i>
-            <span>Choose the most appropriate category to help organize your knowledge universe</span>
-          </li>
-          <li className="flex items-start">
-            <i className="bi bi-check-circle text-purple-400 mr-2 mt-1"></i>
-            <span>After creating nodes, connect them to discover relationships and generate insights</span>
-          </li>
-        </ul>
-      </motion.div>
     </div>
   );
 };
 
-export default CreateNode;
+export default EditNode;

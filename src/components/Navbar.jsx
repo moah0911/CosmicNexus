@@ -58,12 +58,29 @@ const Navbar = () => {
 
             {user ? (
               <>
+                <Link to="/cosmic-hub" className={`${isActive('/cosmic-hub')} transition-colors duration-200`}>Cosmic Hub</Link>
+                <div className="relative group">
+                  <button className="flex items-center space-x-1 text-purple-200 hover:text-purple-400">
+                    <span>Explore</span>
+                    <i className="bi bi-chevron-down text-sm"></i>
+                  </button>
+                  <div className="absolute left-0 mt-2 w-48 bg-black/90 rounded-md shadow-lg py-1 z-10 hidden group-hover:block border border-purple-900/50 backdrop-blur-sm"
+                    style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}>
+                    <Link to="/map" className="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-900/30">
+                      <i className="bi bi-diagram-3 mr-2"></i>Knowledge Map
+                    </Link>
+                    <Link to="/cosmic-discoveries" className="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-900/30">
+                      <i className="bi bi-stars mr-2"></i>Discoveries
+                    </Link>
+                    <Link to="/cosmic-connections" className="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-900/30">
+                      <i className="bi bi-link-45deg mr-2"></i>Connections
+                    </Link>
+                    <Link to="/cosmic-insights" className="block px-4 py-2 text-sm text-purple-200 hover:bg-purple-900/30">
+                      <i className="bi bi-lightbulb mr-2"></i>Insights
+                    </Link>
+                  </div>
+                </div>
                 <Link to="/dashboard" className={`${isActive('/dashboard')} transition-colors duration-200`}>Dashboard</Link>
-                <Link to="/map" className={`${isActive('/map')} transition-colors duration-200 relative group`}>
-                  <span>Cosmic Explorer</span>
-                </Link>
-                <Link to="/insights-landing" className={`${isActive('/insights-landing')} transition-colors duration-200`}>Cosmic Insights</Link>
-                <Link to="/connections" className={`${isActive('/connections')} transition-colors duration-200`}>Connections</Link>
                 <div className="relative group">
                   <button className="flex items-center space-x-1 text-purple-200 hover:text-purple-400">
                     <span>Account</span>
@@ -124,48 +141,83 @@ const Navbar = () => {
               {user ? (
                 <>
                   <Link
-                    to="/dashboard"
-                    className={`${isActive('/dashboard')} px-2 py-1 rounded-md`}
+                    to="/cosmic-hub"
+                    className={`${isActive('/cosmic-hub')} px-2 py-1 rounded-md flex items-center`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Dashboard
+                    <i className="bi bi-grid mr-2"></i>
+                    <span>Cosmic Hub</span>
                   </Link>
+
+                  <div className="px-2 py-1 text-purple-400 text-sm font-medium border-t border-b border-purple-900/30 my-1">
+                    EXPLORE
+                  </div>
+
                   <Link
                     to="/map"
                     className={`${isActive('/map')} px-2 py-1 rounded-md flex items-center`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <span>Cosmic Explorer</span>
+                    <i className="bi bi-diagram-3 mr-2"></i>
+                    <span>Knowledge Map</span>
                   </Link>
+
                   <Link
-                    to="/insights-landing"
-                    className={`${isActive('/insights-landing')} px-2 py-1 rounded-md flex items-center`}
+                    to="/cosmic-discoveries"
+                    className={`${isActive('/cosmic-discoveries')} px-2 py-1 rounded-md flex items-center`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    <span>Cosmic Insights</span>
+                    <i className="bi bi-stars mr-2"></i>
+                    <span>Discoveries</span>
                   </Link>
+
                   <Link
-                    to="/connections"
-                    className={`${isActive('/connections')} px-2 py-1 rounded-md`}
+                    to="/cosmic-connections"
+                    className={`${isActive('/cosmic-connections')} px-2 py-1 rounded-md flex items-center`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Connections
+                    <i className="bi bi-link-45deg mr-2"></i>
+                    <span>Connections</span>
+                  </Link>
+
+                  <Link
+                    to="/cosmic-insights"
+                    className={`${isActive('/cosmic-insights')} px-2 py-1 rounded-md flex items-center`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <i className="bi bi-lightbulb mr-2"></i>
+                    <span>Insights</span>
+                  </Link>
+
+                  <div className="px-2 py-1 text-purple-400 text-sm font-medium border-t border-b border-purple-900/30 my-1">
+                    MANAGE
+                  </div>
+
+                  <Link
+                    to="/dashboard"
+                    className={`${isActive('/dashboard')} px-2 py-1 rounded-md flex items-center`}
+                    onClick={() => setIsMenuOpen(false)}
+                  >
+                    <i className="bi bi-speedometer2 mr-2"></i>
+                    <span>Dashboard</span>
                   </Link>
                   <Link
                     to="/profile"
-                    className={`${isActive('/profile')} px-2 py-1 rounded-md`}
+                    className={`${isActive('/profile')} px-2 py-1 rounded-md flex items-center`}
                     onClick={() => setIsMenuOpen(false)}
                   >
-                    Profile
+                    <i className="bi bi-person mr-2"></i>
+                    <span>Profile</span>
                   </Link>
                   <button
                     onClick={() => {
                       handleSignOut()
                       setIsMenuOpen(false)
                     }}
-                    className="text-left text-neutral-600 hover:text-primary-600 px-2 py-1 rounded-md"
+                    className="text-left w-full text-purple-400 hover:text-red-400 px-2 py-1 rounded-md flex items-center"
                   >
-                    Sign Out
+                    <i className="bi bi-box-arrow-right mr-2"></i>
+                    <span>Sign Out</span>
                   </button>
                 </>
               ) : (

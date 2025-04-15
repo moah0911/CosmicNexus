@@ -5,15 +5,20 @@ import Home from './pages/Home_new_fixed'
 import Login from './pages/Login'
 import Register from './pages/Register'
 import Dashboard from './pages/Dashboard'
-import Connections from './pages/Connections_new'
 import Profile from './pages/Profile'
 import NotFound from './pages/NotFound'
 import CosmicExplorer from './pages/CosmicExplorer'
 import CosmicInsights from './pages/CosmicInsights'
-import InsightsLanding from './pages/InsightsLanding'
 import CreateNode from './pages/CreateNode'
 import CreateConnection from './pages/CreateConnection'
 import GenerateInsights from './pages/GenerateInsights'
+import PromptTemplates from './pages/PromptTemplates'
+import CosmicHub from './pages/CosmicHub'
+import CosmicConnections from './pages/CosmicConnections'
+import CosmicDiscoveries from './pages/CosmicDiscoveries'
+import NodeDetails from './pages/NodeDetails'
+import EditNode from './pages/EditNode'
+import CreateCosmic from './pages/CreateCosmic'
 import AuthRedirectHandler from './components/AuthRedirectHandler'
 import AuthCallback from './pages/AuthCallback'
 import RegistrationSuccess from './pages/RegistrationSuccess'
@@ -76,15 +81,25 @@ function App() {
           {/* Protected Routes */}
           <Route path="dashboard" element={user ? <Dashboard /> : <Navigate to="/login" />} />
           <Route path="map" element={user ? <CosmicExplorer /> : <Navigate to="/login" />} />
-          <Route path="insights-landing" element={user ? <InsightsLanding /> : <Navigate to="/login" />} />
-          <Route path="insights" element={user ? <CosmicInsights /> : <Navigate to="/login" />} />
-          <Route path="connections" element={user ? <Connections /> : <Navigate to="/login" />} />
+          <Route path="insights" element={<Navigate to="/cosmic-insights" />} />
+          <Route path="cosmic-insights" element={user ? <CosmicInsights /> : <Navigate to="/login" />} />
           <Route path="profile" element={user ? <Profile /> : <Navigate to="/login" />} />
+
+          {/* New Cosmic Pages */}
+          <Route path="cosmic-hub" element={user ? <CosmicHub /> : <Navigate to="/login" />} />
+          <Route path="cosmic-connections" element={user ? <CosmicConnections /> : <Navigate to="/login" />} />
+          <Route path="cosmic-discoveries" element={user ? <CosmicDiscoveries /> : <Navigate to="/login" />} />
 
           {/* New dedicated creation pages */}
           <Route path="create-node" element={user ? <CreateNode /> : <Navigate to="/login" />} />
           <Route path="create-connection" element={user ? <CreateConnection /> : <Navigate to="/login" />} />
           <Route path="generate-insights" element={user ? <GenerateInsights /> : <Navigate to="/login" />} />
+          <Route path="prompt-templates" element={user ? <PromptTemplates /> : <Navigate to="/login" />} />
+          <Route path="create-cosmic" element={user ? <CreateCosmic /> : <Navigate to="/login" />} />
+
+          {/* Node details and editing */}
+          <Route path="node/:nodeId" element={user ? <NodeDetails /> : <Navigate to="/login" />} />
+          <Route path="edit-node/:nodeId" element={user ? <EditNode /> : <Navigate to="/login" />} />
 
           {/* 404 Route */}
           <Route path="*" element={<NotFound />} />

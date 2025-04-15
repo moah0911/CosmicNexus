@@ -266,6 +266,43 @@
   }
 }
 
+/* Dashboard Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-15px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes moveLeftRight {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.3;
+    transform: scale(0.8);
+  }
+  100% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
 /* Glassmorphism */
 .glass {
   background: rgba(255, 255, 255, 0.25);

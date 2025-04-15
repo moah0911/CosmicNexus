@@ -12,7 +12,7 @@ const Layout = () => {
   const location = useLocation()
 
   // Determine if we're on a page that needs special layout treatment
-  const isSpecialPage = ['/map', '/insights'].some(path => location.pathname.includes(path))
+  const isSpecialPage = ['/map', '/cosmic-insights', '/cosmic-connections', '/cosmic-discoveries'].some(path => location.pathname.includes(path))
 
   return (
     <div className="flex flex-col min-h-screen bg-black overflow-hidden">

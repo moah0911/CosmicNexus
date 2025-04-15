@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { toast } from 'react-toastify'
 import { fetchInterestNodes, fetchConnections, fetchDiscoveryPrompts } from '../services/interestService'
 import InterestNode from '../components/InterestNode'
@@ -7,6 +7,7 @@ import ConnectionCard from '../components/ConnectionCard'
 import DiscoveryPrompt from '../components/DiscoveryPrompt'
 
 const Dashboard = () => {
+  const navigate = useNavigate()
   const [nodes, setNodes] = useState([])
   const [connections, setConnections] = useState([])
   const [discoveryPrompts, setDiscoveryPrompts] = useState([])
@@ -105,12 +106,12 @@ const Dashboard = () => {
 
           <div className="mt-4 md:mt-0">
             <Link
-              to="/map"
+              to="/cosmic-hub"
               className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex items-center hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 group cursor-pointer"
               style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
             >
               <i className="bi bi-stars mr-2"></i>
-              <span>Explore Your Cosmic Universe</span>
+              <span>Enter Cosmic Hub</span>
               <span className="ml-2 px-1.5 py-0.5 text-[10px] rounded-full bg-white/20 text-white">New</span>
               <i className="bi bi-arrow-right ml-2 transition-transform duration-300 group-hover:translate-x-1"></i>
             </Link>
@@ -120,7 +121,7 @@ const Dashboard = () => {
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10">
-        <Link to="/map" className="block p-6 rounded-xl bg-black/40 border border-purple-800/30 hover:border-purple-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
+        <Link to="/cosmic-discoveries" className="block p-6 rounded-xl bg-black/40 border border-purple-800/30 hover:border-purple-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
           style={{ boxShadow: '0 0 20px rgba(147, 51, 234, 0.1)' }}
           onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(147, 51, 234, 0.25)'}
           onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(147, 51, 234, 0.1)'}>
@@ -130,12 +131,12 @@ const Dashboard = () => {
 
           <div className="flex items-center justify-between relative">
             <div>
-              <h3 className="text-lg font-medium text-purple-200 mb-1">Cosmic Nodes</h3>
+              <h3 className="text-lg font-medium text-purple-200 mb-1">Knowledge Nodes</h3>
               <p className="text-3xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-purple-300 to-indigo-400">{nodes.length}</p>
             </div>
             <div className="w-12 h-12 rounded-full bg-purple-900/30 flex items-center justify-center relative overflow-hidden"
               style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.2)' }}>
-              <i className="bi bi-stars text-xl text-purple-300 relative z-10"></i>
+              <i className="bi bi-diagram-3 text-xl text-purple-300 relative z-10"></i>
               <div className="absolute inset-0 bg-purple-500 opacity-0 animate-pulse"
                 style={{
                   animationDuration: '3s',
@@ -147,7 +148,7 @@ const Dashboard = () => {
 
         </Link>
 
-        <Link to="/connections" className="block p-6 rounded-xl bg-black/40 border border-indigo-800/30 hover:border-indigo-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
+        <Link to="/cosmic-connections" className="block p-6 rounded-xl bg-black/40 border border-indigo-800/30 hover:border-indigo-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
           style={{ boxShadow: '0 0 20px rgba(99, 102, 241, 0.1)' }}
           onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(99, 102, 241, 0.25)'}
           onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(99, 102, 241, 0.1)'}>
@@ -174,11 +175,10 @@ const Dashboard = () => {
 
         </Link>
 
-        <Link to="/insights-landing" className="block p-6 rounded-xl bg-black/40 border border-blue-800/30 hover:border-blue-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
+        <Link to="/cosmic-insights" className="block p-6 rounded-xl bg-black/40 border border-blue-800/30 hover:border-blue-700/50 hover:bg-black/50 transition-all duration-300 relative overflow-hidden cursor-pointer transform hover:translate-y-[-2px]"
           style={{ boxShadow: '0 0 20px rgba(59, 130, 246, 0.1)' }}
           onMouseOver={(e) => e.currentTarget.style.boxShadow = '0 0 25px rgba(59, 130, 246, 0.25)'}
           onMouseOut={(e) => e.currentTarget.style.boxShadow = '0 0 20px rgba(59, 130, 246, 0.1)'}>
-
           {/* Subtle animated glow */}
           <div className="absolute -inset-1 bg-gradient-to-r from-blue-900/10 to-cyan-900/10 rounded-xl blur-xl opacity-50 group-hover:opacity-75 transition duration-500"></div>
 
@@ -198,7 +198,6 @@ const Dashboard = () => {
               </div>
             </div>
           </div>
-
         </Link>
       </div>
 
@@ -210,46 +209,57 @@ const Dashboard = () => {
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
           <Link
-            to="/create-node"
+            to="/create-cosmic"
             className="px-4 py-2 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white flex items-center hover:from-purple-600 hover:to-indigo-600 transition-all duration-300"
             style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
           >
             <i className="bi bi-plus-lg mr-2"></i>
-            <span>Add Cosmic Node</span>
+            <span>Create New</span>
           </Link>
         </div>
 
         {nodes.length === 0 ? (
-          <div className="p-8 rounded-xl bg-black/40 border border-purple-800/30 text-center relative overflow-hidden"
-            style={{ boxShadow: '0 0 20px rgba(147, 51, 234, 0.1)' }}>
-            {/* Subtle animated glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-900/10 to-indigo-900/10 rounded-xl blur-xl opacity-50"></div>
+          <div className="p-8 rounded-2xl bg-gradient-to-br from-black/60 to-purple-900/20 border border-purple-800/40 text-center relative overflow-hidden group hover:border-purple-700/60 transition-all duration-500"
+            style={{ boxShadow: '0 0 30px rgba(147, 51, 234, 0.15)' }}>
+            {/* Enhanced animated glow */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-purple-900/20 to-indigo-900/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-500"></div>
 
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-800 to-indigo-800 flex items-center justify-center text-white mx-auto mb-6 relative overflow-hidden"
-              style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.5)' }}>
-              <i className="bi bi-stars text-3xl relative z-10"></i>
-              <div className="absolute inset-0 bg-purple-500 opacity-0 animate-pulse"
+            {/* Floating particles effect */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(5)].map((_, i) => (
+                <div key={i}
+                  className="absolute w-2 h-2 rounded-full bg-purple-500/30"
+                  style={{
+                    top: `${Math.random() * 100}%`,
+                    left: `${Math.random() * 100}%`,
+                    animation: `float ${3 + Math.random() * 5}s linear infinite`,
+                    animationDelay: `${Math.random() * 5}s`
+                  }}>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-purple-800 to-indigo-800 flex items-center justify-center text-white mx-auto mb-8 relative overflow-hidden transform group-hover:scale-110 transition-all duration-500"
+              style={{ boxShadow: '0 0 20px rgba(147, 51, 234, 0.6)' }}>
+              <i className="bi bi-diagram-3 text-4xl relative z-10 group-hover:animate-pulse"></i>
+              <div className="absolute inset-0 bg-purple-500 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
                 style={{
-                  animationDuration: '3s',
-                  boxShadow: 'inset 0 0 20px rgba(192, 132, 252, 0.5)'
+                  boxShadow: 'inset 0 0 25px rgba(192, 132, 252, 0.7)'
                 }}>
               </div>
             </div>
-            <h3 className="text-xl font-medium text-purple-200 mb-3">Your Cosmic Universe Awaits</h3>
-            <p className="text-purple-300 mb-6 max-w-md mx-auto">
-              Begin your journey by adding celestial nodes representing your interests, passions, and areas of curiosity.
+            <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-200 to-indigo-200 mb-4">Your Knowledge Universe Awaits</h3>
+            <p className="text-purple-300 mb-8 max-w-md mx-auto text-lg">
+              Begin your journey by adding knowledge nodes representing your interests, passions, and areas of curiosity.
             </p>
-            <Link
-              to="#"
-              onClick={(e) => {
-                e.preventDefault();
-                setIsModalOpen(true);
-              }}
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 inline-block"
-              style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
+            <button
+              onClick={() => navigate('/create-cosmic')}
+              className="px-8 py-4 rounded-full bg-gradient-to-r from-purple-700 to-indigo-700 text-white text-lg font-medium hover:from-purple-600 hover:to-indigo-600 transition-all duration-300 inline-flex items-center group-hover:translate-y-0 transform hover:-translate-y-1"
+              style={{ boxShadow: '0 4px 20px rgba(147, 51, 234, 0.5)' }}
             >
-              Create Your First Cosmic Node
-            </Link>
+              <i className="bi bi-plus-circle mr-2"></i>
+              Create Your First Knowledge Node
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -291,7 +301,7 @@ const Dashboard = () => {
                 <div className="absolute inset-0 bg-gradient-to-r from-purple-900/5 to-indigo-900/5 opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
                 <div className="text-center relative z-10">
                   <i className="bi bi-stars text-2xl text-purple-400 mb-3 group-hover:scale-110 transition-transform duration-300"></i>
-                  <p className="text-purple-300 font-medium">Explore All Cosmic Nodes</p>
+                  <p className="text-purple-300 font-medium">Explore All Knowledge Nodes</p>
                 </div>
               </Link>
             )}
@@ -303,41 +313,58 @@ const Dashboard = () => {
       <div className="mb-10">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-2xl font-bold text-purple-200 relative">
-            <span className="relative z-10">Celestial Connections</span>
+            <span className="relative z-10">Cosmic Connections</span>
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <Link to="/connections" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
+          <Link to="/cosmic-connections" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
             <span>View All</span>
             <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
           </Link>
         </div>
 
         {connections.length === 0 ? (
-          <div className="p-8 rounded-xl bg-black/40 border border-purple-800/30 text-center relative overflow-hidden"
-            style={{ boxShadow: '0 0 20px rgba(147, 51, 234, 0.1)' }}>
-            {/* Subtle animated glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl blur-xl opacity-30"></div>
+          <div className="p-8 rounded-2xl bg-gradient-to-br from-black/60 to-indigo-900/20 border border-indigo-800/40 text-center relative overflow-hidden group hover:border-indigo-700/60 transition-all duration-500"
+            style={{ boxShadow: '0 0 30px rgba(99, 102, 241, 0.15)' }}>
+            {/* Enhanced animated glow */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-indigo-900/20 to-purple-900/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-500"></div>
 
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white mx-auto mb-6 relative overflow-hidden"
-              style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.5)' }}>
-              <i className="bi bi-link-45deg text-3xl relative z-10"></i>
-              <div className="absolute inset-0 bg-indigo-400 opacity-0 animate-pulse"
+            {/* Animated connection lines */}
+            <div className="absolute inset-0 overflow-hidden">
+              {[...Array(3)].map((_, i) => (
+                <div key={i}
+                  className="absolute h-px bg-gradient-to-r from-indigo-500/0 via-indigo-500/50 to-indigo-500/0"
+                  style={{
+                    top: `${20 + (i * 30)}%`,
+                    left: '0',
+                    right: '0',
+                    animation: `moveLeftRight ${5 + i}s linear infinite`,
+                    animationDelay: `${i * 1.5}s`
+                  }}>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-indigo-600 to-purple-600 flex items-center justify-center text-white mx-auto mb-8 relative overflow-hidden transform group-hover:scale-110 transition-all duration-500"
+              style={{ boxShadow: '0 0 20px rgba(99, 102, 241, 0.6)' }}>
+              <i className="bi bi-link-45deg text-4xl relative z-10 group-hover:rotate-12 transition-transform duration-300"></i>
+              <div className="absolute inset-0 bg-indigo-400 opacity-0 group-hover:opacity-20 transition-opacity duration-500"
                 style={{
-                  animationDuration: '3s',
-                  boxShadow: 'inset 0 0 20px rgba(165, 180, 252, 0.5)'
+                  boxShadow: 'inset 0 0 25px rgba(165, 180, 252, 0.7)'
                 }}>
               </div>
             </div>
-            <h3 className="text-xl font-medium text-purple-200 mb-3">Discover Celestial Connections</h3>
-            <p className="text-purple-300 mb-6 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-indigo-200 to-purple-200 mb-4">Discover Celestial Connections</h3>
+            <p className="text-indigo-300 mb-8 max-w-md mx-auto text-lg">
               Explore how your cosmic nodes interconnect and reveal hidden patterns across your universe of knowledge.
             </p>
-            <Link to="/map"
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 inline-block"
-              style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
+            <button
+              onClick={() => navigate('/cosmic-connections')}
+              className="px-8 py-4 rounded-full bg-gradient-to-r from-indigo-600 to-purple-600 text-white text-lg font-medium hover:from-indigo-500 hover:to-purple-500 transition-all duration-300 inline-flex items-center group-hover:translate-y-0 transform hover:-translate-y-1"
+              style={{ boxShadow: '0 4px 20px rgba(99, 102, 241, 0.5)' }}
             >
+              <i className="bi bi-stars mr-2"></i>
               Discover Cosmic Connections
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="space-y-4">
@@ -364,38 +391,57 @@ const Dashboard = () => {
             <span className="relative z-10">Cosmic Insights</span>
             <div className="absolute -bottom-2 left-0 h-1 w-20 bg-gradient-to-r from-purple-500 to-indigo-500 rounded-full"></div>
           </h2>
-          <Link to="/generate-insights" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
-            <span>Generate New</span>
+          <Link to="/cosmic-insights" className="text-purple-300 hover:text-purple-100 font-medium flex items-center group cursor-pointer">
+            <span>View All</span>
             <i className="bi bi-arrow-right ml-1 transition-transform duration-300 group-hover:translate-x-1"></i>
           </Link>
         </div>
 
         {discoveryPrompts.length === 0 ? (
-          <div className="p-8 rounded-xl bg-black/40 border border-purple-800/30 text-center relative overflow-hidden"
-            style={{ boxShadow: '0 0 20px rgba(147, 51, 234, 0.1)' }}>
-            {/* Subtle animated glow */}
-            <div className="absolute -inset-1 bg-gradient-to-r from-purple-500/10 to-indigo-500/10 rounded-xl blur-xl opacity-30"></div>
+          <div className="p-8 rounded-2xl bg-gradient-to-br from-black/60 to-fuchsia-900/20 border border-fuchsia-800/40 text-center relative overflow-hidden group hover:border-fuchsia-700/60 transition-all duration-500"
+            style={{ boxShadow: '0 0 30px rgba(168, 85, 247, 0.15)' }}>
+            {/* Enhanced animated glow */}
+            <div className="absolute -inset-1 bg-gradient-to-r from-fuchsia-900/20 to-purple-900/20 rounded-2xl blur-xl opacity-50 group-hover:opacity-70 transition-opacity duration-500"></div>
 
-            <div className="w-20 h-20 rounded-full bg-gradient-to-br from-purple-600 to-indigo-600 flex items-center justify-center text-white mx-auto mb-6 relative overflow-hidden"
-              style={{ boxShadow: '0 0 15px rgba(139, 92, 246, 0.5)' }}>
-              <i className="bi bi-lightbulb text-3xl relative z-10"></i>
-              <div className="absolute inset-0 bg-purple-400 opacity-0 animate-pulse"
+            {/* Animated light rays */}
+            <div className="absolute inset-0 overflow-hidden opacity-30 group-hover:opacity-50 transition-opacity duration-500">
+              {[...Array(6)].map((_, i) => (
+                <div key={i}
+                  className="absolute w-1 h-40 bg-gradient-to-t from-fuchsia-500/0 via-fuchsia-500/70 to-fuchsia-500/0 rounded-full"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                    transform: `rotate(${i * 60}deg) translateY(-50%)`,
+                    transformOrigin: 'center bottom',
+                    animation: `pulse ${3 + Math.random() * 2}s ease-in-out infinite alternate`,
+                    animationDelay: `${i * 0.5}s`
+                  }}>
+                </div>
+              ))}
+            </div>
+
+            <div className="w-24 h-24 rounded-full bg-gradient-to-br from-fuchsia-600 to-purple-600 flex items-center justify-center text-white mx-auto mb-8 relative overflow-hidden transform group-hover:scale-110 transition-all duration-500"
+              style={{ boxShadow: '0 0 20px rgba(168, 85, 247, 0.6)' }}>
+              <i className="bi bi-lightbulb text-4xl relative z-10"></i>
+              <div className="absolute inset-0 bg-fuchsia-400 opacity-0 group-hover:opacity-30 transition-opacity duration-500 animate-pulse"
                 style={{
-                  animationDuration: '3s',
-                  boxShadow: 'inset 0 0 20px rgba(167, 139, 250, 0.5)'
+                  animationDuration: '2s',
+                  boxShadow: 'inset 0 0 25px rgba(217, 70, 239, 0.7)'
                 }}>
               </div>
             </div>
-            <h3 className="text-xl font-medium text-purple-200 mb-3">Unlock Cosmic Insights</h3>
-            <p className="text-purple-300 mb-6 max-w-md mx-auto">
+            <h3 className="text-2xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-fuchsia-200 to-purple-200 mb-4">Unlock Cosmic Insights</h3>
+            <p className="text-fuchsia-300 mb-8 max-w-md mx-auto text-lg">
               Generate AI-powered insights to explore new dimensions and undiscovered territories in your cosmic knowledge universe.
             </p>
-            <Link to="/generate-insights"
-              className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 inline-block cursor-pointer"
-              style={{ boxShadow: '0 0 15px rgba(139, 92, 246, 0.3)' }}
+            <button
+              onClick={() => navigate('/cosmic-insights')}
+              className="px-8 py-4 rounded-full bg-gradient-to-r from-fuchsia-600 to-purple-600 text-white text-lg font-medium hover:from-fuchsia-500 hover:to-purple-500 transition-all duration-300 inline-flex items-center group-hover:translate-y-0 transform hover:-translate-y-1"
+              style={{ boxShadow: '0 4px 20px rgba(168, 85, 247, 0.5)' }}
             >
-              Generate Cosmic Insights
-            </Link>
+              <i className="bi bi-sparkle mr-2"></i>
+              Generate New Insights
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

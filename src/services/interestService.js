@@ -199,10 +199,12 @@ export const deleteInterestNode = async (id) => {
 
     console.log(`deleteInterestNode: Deleting connections for node with id ${id}`);
 
+    // Refresh schema cache to ensure we have the latest schema
+    await refreshSchemaCache()
+
     // First delete all connections involving this node
-    // This operation doesn't need to reference the is_manual column
     const { error: connectionsError } = await supabase
-      .from('connections')
+      .from(DB_SCHEMA.TABLES.CONNECTIONS)
       .delete()
       .or(`source_node_id.eq.${id},target_node_id.eq.${id}`)
       .eq('user_id', user.id)
@@ -216,7 +218,7 @@ export const deleteInterestNode = async (id) => {
 
     // Then delete the node itself
     const { error } = await supabase
-      .from('interest_nodes')
+      .from(DB_SCHEMA.TABLES.INTEREST_NODES)
       .delete()
       .eq('id', id)
       .eq('user_id', user.id)
@@ -554,6 +556,164 @@ export const deleteDiscoveryPrompt = async (id) => {
     return { success: true }
   } catch (error) {
     console.error('Error deleting discovery prompt:', error)
+    return { success: false, error }
+  }
+}
+
+// Fetch a single interest node by ID
+export const fetchInterestNodeById = async (id) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      throw new Error('User not authenticated')
+    }
+
+    const { data, error } = await supabase
+      .from(DB_SCHEMA.TABLES.INTEREST_NODES)
+      .select(getSafeColumns(DB_SCHEMA.TABLES.INTEREST_NODES))
+      .eq('id', id)
+      .eq('user_id', user.id)
+      .single()
+
+    if (error) {
+      console.error('Error fetching interest node by ID:', error)
+      throw error
+    }
+
+    return { success: true, data }
+  } catch (error) {
+    console.error('Error fetching interest node by ID:', error)
+    return { success: false, error }
+  }
+}
+
+// Fetch connections for a specific node
+export const fetchNodeConnections = async (nodeId) => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      throw new Error('User not authenticated')
+    }
+
+    // Use our schema utility to get safe columns
+    const { data, error } = await supabase
+      .from(DB_SCHEMA.TABLES.CONNECTIONS)
+      .select(`
+        ${getSafeColumns(DB_SCHEMA.TABLES.CONNECTIONS)},
+        source_node:${DB_SCHEMA.TABLES.INTEREST_NODES}!source_node_id(id, title, category),
+        target_node:${DB_SCHEMA.TABLES.INTEREST_NODES}!target_node_id(id, title, category)
+      `)
+      .or(`source_node_id.eq.${nodeId},target_node_id.eq.${nodeId}`)
+      .eq('user_id', user.id)
+      .order('created_at', { ascending: false })
+
+    if (error) {
+      console.error('Error fetching node connections:', error)
+      throw error
+    }
+
+    // Process the connections to add source_name and target_name
+    const processedConnections = (data || []).map(conn => ({
+      ...conn,
+      source_name: conn.source_node?.title || 'Unknown',
+      target_name: conn.target_node?.title || 'Unknown',
+      relationship_type: conn.relationship_type || 'related',
+      is_manual: conn.is_manual || false
+    }))
+
+    return { success: true, data: processedConnections }
+  } catch (error) {
+    console.error('Error fetching node connections:', error)
+    return { success: false, error }
+  }
+}
+
+// Create a new connection
+export const createConnection = async (connectionData) => {
+  try {
+    // Validate required fields
+    if (!connectionData.source_node_id) {
+      return { success: false, error: { message: 'Source node is required' } }
+    }
+
+    if (!connectionData.target_node_id) {
+      return { success: false, error: { message: 'Target node is required' } }
+    }
+
+    if (connectionData.source_node_id === connectionData.target_node_id) {
+      return { success: false, error: { message: 'Source and target nodes must be different' } }
+    }
+
+    if (!connectionData.description || !connectionData.description.trim()) {
+      return { success: false, error: { message: 'Description is required' } }
+    }
+
+    const { data: { user } } = await supabase.auth.getUser()
+
+    if (!user) {
+      throw new Error('User not authenticated')
+    }
+
+    // Check if a similar connection already exists
+    const { data: existingConnections, error: checkError } = await supabase
+      .from(DB_SCHEMA.TABLES.CONNECTIONS)
+      .select('id')
+      .eq('user_id', user.id)
+      .eq('source_node_id', connectionData.source_node_id)
+      .eq('target_node_id', connectionData.target_node_id)
+
+    if (checkError) throw checkError
+
+    if (existingConnections && existingConnections.length > 0) {
+      return {
+        success: false,
+        error: { message: 'A connection between these nodes already exists' }
+      }
+    }
+
+    // Create a sanitized connection record for the database
+    const connectionRecord = sanitizeForDB(DB_SCHEMA.TABLES.CONNECTIONS, {
+      id: uuidv4(),
+      user_id: user.id,
+      source_node_id: connectionData.source_node_id,
+      target_node_id: connectionData.target_node_id,
+      description: connectionData.description.trim(),
+      strength: connectionData.strength || 3,
+      relationship_type: connectionData.relationship_type || 'related',
+      created_at: new Date().toISOString()
+    })
+
+    const { data, error } = await supabase
+      .from(DB_SCHEMA.TABLES.CONNECTIONS)
+      .insert([connectionRecord])
+      .select()
+
+    if (error) throw error
+
+    // Fetch the source and target node names for the response
+    const { data: nodes, error: nodesError } = await supabase
+      .from(DB_SCHEMA.TABLES.INTEREST_NODES)
+      .select('id, title')
+      .in('id', [connectionData.source_node_id, connectionData.target_node_id])
+
+    if (nodesError) throw nodesError
+
+    const sourceNode = nodes.find(n => n.id === connectionData.source_node_id)
+    const targetNode = nodes.find(n => n.id === connectionData.target_node_id)
+
+    // Add client-side fields
+    const connectionWithClientFields = {
+      ...data[0],
+      source_name: sourceNode?.title || 'Unknown',
+      target_name: targetNode?.title || 'Unknown',
+      is_manual: true
+    }
+
+    return { success: true, data: connectionWithClientFields }
+  } catch (error) {
+    console.error('Error creating connection:', error)
     return { success: false, error }
   }
 }

@@ -1,135 +1,152 @@
-import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
-import { toast } from 'react-toastify'
-import { motion } from 'framer-motion'
-import { fetchInterestNodes, generateConnections } from '../services/interestService'
+import { useState, useEffect } from 'react';
+import { useNavigate, useLocation, Link } from 'react-router-dom';
+import { motion } from 'framer-motion';
+import { toast } from 'react-toastify';
+import { fetchInterestNodes, createConnection } from '../services/interestService';
+import { RELATIONSHIP_TYPES, RELATIONSHIP_DISPLAY, getCategoryIcon } from '../models/CosmicTypes';
 
 const CreateConnection = () => {
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+  const location = useLocation();
   
-  // State for nodes and selection
-  const [nodes, setNodes] = useState([])
-  const [sourceNode, setSourceNode] = useState(null)
-  const [targetNode, setTargetNode] = useState(null)
-  const [loading, setLoading] = useState(true)
+  // Get preselected node ID from location state if available
+  const preselectedNodeId = location.state?.preselectedNodeId || '';
   
-  // State for connection details
-  const [description, setDescription] = useState('')
-  const [connectionType, setConnectionType] = useState('related')
-  const [strength, setStrength] = useState(3)
-  const [isCreating, setIsCreating] = useState(false)
+  // State management
+  const [nodes, setNodes] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [submitting, setSubmitting] = useState(false);
   
-  // State for UI
-  const [searchTerm, setSearchTerm] = useState('')
-  const [filteredNodes, setFilteredNodes] = useState([])
+  // Form state
+  const [sourceNodeId, setSourceNodeId] = useState(preselectedNodeId);
+  const [targetNodeId, setTargetNodeId] = useState('');
+  const [relationshipType, setRelationshipType] = useState(RELATIONSHIP_TYPES.RELATED);
+  const [description, setDescription] = useState('');
+  const [strength, setStrength] = useState(3);
+  
+  // UI state
+  const [sourceNode, setSourceNode] = useState(null);
+  const [targetNode, setTargetNode] = useState(null);
+  const [step, setStep] = useState(1); // 1: Select nodes, 2: Define relationship
 
   // Load nodes on component mount
   useEffect(() => {
-    loadNodes()
-  }, [])
+    loadNodes();
+  }, []);
 
-  // Filter nodes when search term changes
+  // Update source and target nodes when IDs change
   useEffect(() => {
-    if (nodes.length > 0) {
-      const filtered = nodes.filter(node => 
-        node.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        node.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        node.category.toLowerCase().includes(searchTerm.toLowerCase())
-      )
-      setFilteredNodes(filtered)
+    if (sourceNodeId) {
+      const node = nodes.find(n => n.id === sourceNodeId);
+      setSourceNode(node);
+    } else {
+      setSourceNode(null);
     }
-  }, [searchTerm, nodes])
+  }, [sourceNodeId, nodes]);
+
+  useEffect(() => {
+    if (targetNodeId) {
+      const node = nodes.find(n => n.id === targetNodeId);
+      setTargetNode(node);
+    } else {
+      setTargetNode(null);
+    }
+  }, [targetNodeId, nodes]);
 
   // Load nodes from API
   const loadNodes = async () => {
     try {
-      setLoading(true)
-      const { success, data } = await fetchInterestNodes()
+      setLoading(true);
+      const result = await fetchInterestNodes();
+
+      if (result.success) {
+        setNodes(result.data);
+        
+        // If we have a preselected node and at least one other node, set the target node
+        if (preselectedNodeId && result.data.length > 1) {
+          // Find the first node that isn't the preselected node
+          const otherNode = result.data.find(node => node.id !== preselectedNodeId);
+          if (otherNode) {
+            setTargetNodeId(otherNode.id);
+          }
+        }
+      } else {
+        toast.error('Failed to load knowledge nodes');
+      }
+    } catch (error) {
+      console.error('Error loading nodes:', error);
+      toast.error('An unexpected error occurred');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle form submission
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    // Validate form
+    if (!sourceNodeId) {
+      toast.error('Please select a source node');
+      return;
+    }
+    
+    if (!targetNodeId) {
+      toast.error('Please select a target node');
+      return;
+    }
+    
+    if (sourceNodeId === targetNodeId) {
+      toast.error('Source and target nodes must be different');
+      return;
+    }
+    
+    if (!description.trim()) {
+      toast.error('Please enter a description for this connection');
+      return;
+    }
+    
+    try {
+      setSubmitting(true);
+      
+      const connectionData = {
+        source_node_id: sourceNodeId,
+        target_node_id: targetNodeId,
+        relationship_type: relationshipType,
+        description: description.trim(),
+        strength
+      };
+      
+      const { success, data, error } = await createConnection(connectionData);
       
       if (success) {
-        setNodes(data)
-        setFilteredNodes(data)
+        toast.success('Connection created successfully');
+        navigate('/cosmic-connections');
       } else {
-        toast.error('Failed to load knowledge nodes')
+        toast.error(error?.message || 'Failed to create connection');
       }
     } catch (error) {
-      console.error('Error loading nodes:', error)
-      toast.error('An unexpected error occurred')
+      console.error('Error creating connection:', error);
+      toast.error('An unexpected error occurred');
     } finally {
-      setLoading(false)
+      setSubmitting(false);
     }
-  }
+  };
 
-  // Handle node selection
-  const handleNodeSelect = (node) => {
-    if (!sourceNode) {
-      setSourceNode(node)
-    } else if (!targetNode && node.id !== sourceNode.id) {
-      setTargetNode(node)
-    } else if (node.id === sourceNode.id) {
-      setSourceNode(null)
-    } else if (node.id === targetNode.id) {
-      setTargetNode(null)
+  // Handle next step
+  const handleNextStep = () => {
+    if (!sourceNodeId || !targetNodeId || sourceNodeId === targetNodeId) {
+      toast.error('Please select two different nodes');
+      return;
     }
-  }
+    
+    setStep(2);
+  };
 
-  // Handle connection creation
-  const handleCreateConnection = async () => {
-    if (!sourceNode || !targetNode) {
-      toast.warning('Please select both source and target nodes')
-      return
-    }
-
-    if (!description.trim()) {
-      toast.warning('Please provide a description for the connection')
-      return
-    }
-
-    try {
-      setIsCreating(true)
-
-      // Prepare the connection data
-      const connectionOptions = {
-        manualDescription: description.trim(),
-        strength: strength,
-        relationshipType: connectionType
-      }
-
-      // Call the API to create the connection
-      const { success, connections, error } = await generateConnections(
-        [sourceNode.id, targetNode.id],
-        connectionOptions
-      )
-
-      if (success) {
-        toast.success('Connection created successfully!')
-        // Navigate back to connections page
-        navigate('/connections')
-      } else {
-        toast.error(error?.message || 'Failed to create connection')
-      }
-    } catch (error) {
-      console.error('Error creating connection:', error)
-      toast.error('An unexpected error occurred')
-    } finally {
-      setIsCreating(false)
-    }
-  }
-
-  // Get category icon
-  const getCategoryIcon = (category) => {
-    switch (category) {
-      case 'art': return 'bi-palette'
-      case 'science': return 'bi-atom'
-      case 'history': return 'bi-hourglass'
-      case 'music': return 'bi-music-note-beamed'
-      case 'literature': return 'bi-book'
-      case 'philosophy': return 'bi-lightbulb'
-      case 'technology': return 'bi-cpu'
-      case 'hobby': return 'bi-controller'
-      default: return 'bi-star'
-    }
-  }
+  // Handle back step
+  const handleBackStep = () => {
+    setStep(1);
+  };
 
   // Animation variants
   const containerVariants = {
@@ -141,279 +158,354 @@ const CreateConnection = () => {
         staggerChildren: 0.1
       }
     }
-  }
+  };
 
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0 }
+  };
+
+  // Loading state
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh]">
+        <div className="flex flex-col items-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-800 to-blue-800 flex items-center justify-center text-white mb-4 relative overflow-hidden"
+            style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.5)' }}>
+            <i className="bi bi-link-45deg text-2xl relative z-10"></i>
+            <div className="absolute inset-0 bg-indigo-500 opacity-0 animate-pulse"
+              style={{
+                animationDuration: '3s',
+                boxShadow: 'inset 0 0 20px rgba(165, 180, 252, 0.5)'
+              }}>
+            </div>
+          </div>
+          <h2 className="text-xl font-medium text-indigo-200">Loading nodes...</h2>
+        </div>
+      </div>
+    );
+  }
+
+  // Not enough nodes
+  if (nodes.length < 2) {
+    return (
+      <div className="max-w-4xl mx-auto">
+        <div className="p-8 rounded-xl bg-black/40 border border-indigo-800/30 text-center">
+          <div className="w-16 h-16 rounded-full bg-gradient-to-br from-indigo-600 to-blue-600 flex items-center justify-center text-white mx-auto mb-4">
+            <i className="bi bi-exclamation-triangle text-2xl"></i>
+          </div>
+          <h3 className="text-xl font-medium text-indigo-200 mb-3">Not Enough Nodes</h3>
+          <p className="text-indigo-300 mb-6 max-w-md mx-auto">
+            You need at least two knowledge nodes to create a connection. Please create more nodes first.
+          </p>
+          <Link to="/create-node" className="px-6 py-3 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white hover:from-purple-500 hover:to-indigo-500 transition-all duration-300 inline-block">
+            Create a Node
+          </Link>
+        </div>
+      </div>
+    );
   }
 
   return (
-    <div className="max-w-5xl mx-auto">
+    <div className="max-w-4xl mx-auto">
+      {/* Back button */}
+      <div className="mb-6">
+        <Link
+          to="/cosmic-connections"
+          className="inline-flex items-center text-indigo-300 hover:text-indigo-200 transition-colors duration-300"
+        >
+          <i className="bi bi-arrow-left mr-2"></i>
+          <span>Back to Connections</span>
+        </Link>
+      </div>
+
       {/* Header */}
       <div className="mb-8">
         <motion.h1 
-          className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-purple-300 via-indigo-400 to-purple-400"
+          className="text-3xl md:text-4xl font-bold mb-4 bg-clip-text text-transparent bg-gradient-to-r from-indigo-300 via-blue-400 to-indigo-400"
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
           style={{
-            textShadow: '0 0 15px rgba(147, 51, 234, 0.4)',
+            textShadow: '0 0 15px rgba(99, 102, 241, 0.4)',
             letterSpacing: '0.05em'
           }}
         >
-          Create New Connection
+          Create Connection
         </motion.h1>
         <motion.p 
-          className="text-purple-300 text-lg max-w-3xl"
+          className="text-indigo-300 text-lg max-w-3xl"
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.1 }}
           style={{
-            textShadow: '0 0 10px rgba(147, 51, 234, 0.2)',
+            textShadow: '0 0 10px rgba(99, 102, 241, 0.2)',
             lineHeight: '1.6'
           }}
         >
-          Connect two knowledge nodes to discover relationships and insights between different areas of your cosmic universe.
+          Connect knowledge nodes to build your cosmic web of ideas and discover new relationships.
         </motion.p>
       </div>
 
-      {/* Main Content */}
+      {/* Progress Steps */}
+      <div className="mb-8">
+        <div className="flex items-center">
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center text-white ${
+            step === 1 ? 'bg-gradient-to-r from-indigo-600 to-blue-600' : 'bg-indigo-900/50 text-indigo-300'
+          }`}>
+            <span>1</span>
+          </div>
+          <div className={`h-1 flex-grow mx-2 ${
+            step === 1 ? 'bg-gradient-to-r from-blue-600/50 to-indigo-600/20' : 'bg-indigo-900/50'
+          }`}></div>
+          <div className={`w-10 h-10 rounded-full flex items-center justify-center ${
+            step === 2 ? 'bg-gradient-to-r from-indigo-600 to-blue-600 text-white' : 'bg-indigo-900/50 text-indigo-300'
+          }`}>
+            <span>2</span>
+          </div>
+        </div>
+        <div className="flex justify-between mt-2">
+          <span className={`text-sm ${step === 1 ? 'text-indigo-300' : 'text-indigo-500'}`}>Select Nodes</span>
+          <span className={`text-sm ${step === 2 ? 'text-indigo-300' : 'text-indigo-500'}`}>Define Relationship</span>
+        </div>
+      </div>
+
+      {/* Form Container */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.5, delay: 0.2 }}
-        className="bg-black/40 backdrop-blur-md rounded-2xl border border-purple-900/50 shadow-xl overflow-hidden"
-        style={{ boxShadow: '0 10px 40px rgba(124, 58, 237, 0.2)' }}
+        className="bg-black/40 backdrop-blur-md rounded-2xl border border-indigo-900/50 shadow-xl overflow-hidden"
+        style={{ boxShadow: '0 10px 40px rgba(99, 102, 241, 0.2)' }}
       >
         <div className="p-6 md:p-8">
-          {/* Step 1: Node Selection */}
-          <div className="mb-8">
-            <h2 className="text-xl font-bold text-purple-200 mb-4">Step 1: Select Two Knowledge Nodes to Connect</h2>
-            
-            {/* Search Bar */}
-            <div className="mb-6">
-              <div className="relative">
-                <input
-                  type="text"
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search your knowledge nodes..."
-                  className="w-full px-5 py-3 pl-12 rounded-xl border-2 border-purple-700 focus:border-purple-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
-                />
-                <div className="absolute left-3 top-3 text-purple-400">
-                  <i className="bi bi-search text-lg"></i>
+          <form onSubmit={handleSubmit}>
+            {step === 1 ? (
+              <div>
+                <h2 className="text-xl font-bold text-indigo-200 mb-6">Step 1: Select Nodes to Connect</h2>
+                
+                {/* Source Node */}
+                <div className="mb-6">
+                  <label htmlFor="sourceNodeId" className="block text-base font-medium text-white mb-2">
+                    Source Node <span className="text-rose-400">*</span>
+                  </label>
+                  <select
+                    id="sourceNodeId"
+                    value={sourceNodeId}
+                    onChange={(e) => {
+                      setSourceNodeId(e.target.value);
+                      // If target is the same as new source, clear target
+                      if (e.target.value === targetNodeId) {
+                        setTargetNodeId('');
+                      }
+                    }}
+                    className="w-full px-5 py-3 rounded-xl border-2 border-indigo-700 focus:border-indigo-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
+                    required
+                  >
+                    <option value="">Select a source node</option>
+                    {nodes.map(node => (
+                      <option key={`source-${node.id}`} value={node.id}>{node.title}</option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-            </div>
 
-            {/* Selected Nodes */}
-            {(sourceNode || targetNode) && (
-              <div className="mb-6 p-4 bg-purple-900/20 rounded-xl border border-purple-800/50">
-                <h3 className="text-sm font-medium text-purple-300 mb-3">Selected Nodes:</h3>
-                <div className="flex flex-wrap gap-2">
-                  {sourceNode && (
-                    <div className="flex items-center bg-black/40 px-3 py-1.5 rounded-full border border-purple-700/50 shadow-sm">
-                      <span className="text-sm text-purple-300 font-medium mr-2">{sourceNode.title}</span>
-                      <button
-                        onClick={() => setSourceNode(null)}
-                        className="text-purple-400 hover:text-purple-300 w-5 h-5 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-colors cursor-pointer"
-                      >
-                        <i className="bi bi-x"></i>
-                      </button>
+                {/* Source Node Preview */}
+                {sourceNode && (
+                  <div className="mb-6 p-4 rounded-xl bg-black/60 border border-indigo-800/30">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-700 to-blue-700 flex items-center justify-center text-white mr-3">
+                        <i className={`bi ${getCategoryIcon(sourceNode.category)} text-sm`}></i>
+                      </div>
+                      <h3 className="font-bold text-indigo-200">{sourceNode.title}</h3>
                     </div>
-                  )}
-                  {targetNode && (
-                    <div className="flex items-center bg-black/40 px-3 py-1.5 rounded-full border border-purple-700/50 shadow-sm">
-                      <span className="text-sm text-purple-300 font-medium mr-2">{targetNode.title}</span>
-                      <button
-                        onClick={() => setTargetNode(null)}
-                        className="text-purple-400 hover:text-purple-300 w-5 h-5 rounded-full flex items-center justify-center hover:bg-purple-900/30 transition-colors cursor-pointer"
+                    <p className="text-indigo-300 text-sm line-clamp-2">{sourceNode.description}</p>
+                  </div>
+                )}
+
+                {/* Target Node */}
+                <div className="mb-6">
+                  <label htmlFor="targetNodeId" className="block text-base font-medium text-white mb-2">
+                    Target Node <span className="text-rose-400">*</span>
+                  </label>
+                  <select
+                    id="targetNodeId"
+                    value={targetNodeId}
+                    onChange={(e) => setTargetNodeId(e.target.value)}
+                    className="w-full px-5 py-3 rounded-xl border-2 border-indigo-700 focus:border-indigo-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
+                    required
+                  >
+                    <option value="">Select a target node</option>
+                    {nodes.map(node => (
+                      <option 
+                        key={`target-${node.id}`} 
+                        value={node.id}
+                        disabled={node.id === sourceNodeId}
                       >
-                        <i className="bi bi-x"></i>
-                      </button>
-                    </div>
-                  )}
+                        {node.title}
+                      </option>
+                    ))}
+                  </select>
                 </div>
-              </div>
-            )}
 
-            {/* Nodes List */}
-            {loading ? (
-              <div className="flex justify-center items-center py-12">
-                <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-purple-500"></div>
+                {/* Target Node Preview */}
+                {targetNode && (
+                  <div className="mb-6 p-4 rounded-xl bg-black/60 border border-indigo-800/30">
+                    <div className="flex items-center mb-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-700 to-blue-700 flex items-center justify-center text-white mr-3">
+                        <i className={`bi ${getCategoryIcon(targetNode.category)} text-sm`}></i>
+                      </div>
+                      <h3 className="font-bold text-indigo-200">{targetNode.title}</h3>
+                    </div>
+                    <p className="text-indigo-300 text-sm line-clamp-2">{targetNode.description}</p>
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                <div className="flex justify-end mt-8 pt-6 border-t border-indigo-800/30">
+                  <button
+                    type="button"
+                    onClick={handleNextStep}
+                    disabled={!sourceNodeId || !targetNodeId || sourceNodeId === targetNodeId}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-700 to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-indigo-600 hover:to-blue-600 cursor-pointer text-center relative overflow-hidden group"
+                    style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-blue-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-80"></span>
+                    <div className="relative z-10">
+                      <span>Next: Define Relationship</span>
+                      <i className="bi bi-arrow-right ml-2"></i>
+                    </div>
+                  </button>
+                </div>
               </div>
             ) : (
-              <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 gap-4 max-h-[400px] overflow-y-auto pr-2"
-                variants={containerVariants}
-                initial="hidden"
-                animate="visible"
-              >
-                {filteredNodes.map(node => (
-                  <motion.div
-                    key={node.id}
-                    onClick={() => handleNodeSelect(node)}
-                    className={`p-4 border rounded-xl cursor-pointer transition-all duration-300 hover:shadow-md ${
-                      sourceNode?.id === node.id || targetNode?.id === node.id
-                        ? 'border-purple-600 bg-black/60 shadow-md'
-                        : 'border-purple-800/30 hover:border-purple-700/50 bg-black/40'
-                    }`}
-                    style={{ boxShadow: (sourceNode?.id === node.id || targetNode?.id === node.id) ? '0 0 15px rgba(147, 51, 234, 0.2)' : '' }}
-                    variants={itemVariants}
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                  >
-                    <div className="flex justify-between items-start">
+              <div>
+                <h2 className="text-xl font-bold text-indigo-200 mb-6">Step 2: Define the Relationship</h2>
+                
+                {/* Connection Preview */}
+                <div className="mb-6 p-4 rounded-xl bg-black/60 border border-indigo-800/30">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-700 to-blue-700 flex items-center justify-center text-white mr-3">
+                        <i className={`bi ${getCategoryIcon(sourceNode.category)} text-lg`}></i>
+                      </div>
                       <div>
-                        <h3 className={`font-bold ${sourceNode?.id === node.id || targetNode?.id === node.id ? 'text-purple-200' : 'text-purple-300'}`}>
-                          {node.title}
-                        </h3>
-                        <span className="inline-block px-3 py-1 text-xs rounded-full bg-gradient-to-r from-purple-900/30 to-indigo-900/30 text-purple-300 capitalize mt-2 font-medium border border-purple-700/30">
-                          <i className={`bi ${getCategoryIcon(node.category)} mr-1`}></i>
-                          {node.category}
-                        </span>
-                      </div>
-                      <div className={`w-6 h-6 rounded-full border flex items-center justify-center transition-all duration-300 ${
-                        sourceNode?.id === node.id || targetNode?.id === node.id
-                          ? 'border-purple-500 bg-purple-600 text-white scale-110 shadow-md'
-                          : 'border-purple-700/50'
-                      }`}>
-                        {(sourceNode?.id === node.id || targetNode?.id === node.id) && (
-                          <i className="bi bi-check text-xs"></i>
-                        )}
+                        <h3 className="font-bold text-indigo-200">{sourceNode.title}</h3>
+                        <span className="text-xs text-indigo-400">{sourceNode.category}</span>
                       </div>
                     </div>
-                    <p className={`text-sm mt-2 line-clamp-2 ${sourceNode?.id === node.id || targetNode?.id === node.id ? 'text-indigo-300' : 'text-purple-400'}`}>
-                      {node.description}
-                    </p>
-                  </motion.div>
-                ))}
-              </motion.div>
-            )}
-          </div>
-
-          {/* Step 2: Connection Details */}
-          <div className="mt-10">
-            <h2 className="text-xl font-bold text-purple-200 mb-4">Step 2: Define the Connection</h2>
-            
-            {/* Connection Type */}
-            <div className="mb-6">
-              <label className="block text-base font-medium text-white mb-2">
-                Connection Type
-              </label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                {[
-                  { value: 'related', label: 'Related', icon: 'bi-link' },
-                  { value: 'influences', label: 'Influences', icon: 'bi-arrow-right' },
-                  { value: 'contrasts', label: 'Contrasts', icon: 'bi-arrow-left-right' },
-                  { value: 'builds_on', label: 'Builds On', icon: 'bi-building-up' }
-                ].map(type => (
-                  <div
-                    key={type.value}
-                    onClick={() => setConnectionType(type.value)}
-                    className={`flex flex-col items-center p-3 rounded-xl cursor-pointer border-2 transition-all duration-200 ${
-                      connectionType === type.value
-                        ? 'border-purple-400 bg-black/80 shadow-md scale-105'
-                        : 'border-purple-700 hover:border-purple-500 hover:bg-black/60'
-                    }`}
-                  >
-                    <div className={`w-10 h-10 rounded-full flex items-center justify-center mb-2 bg-gradient-to-br ${
-                      connectionType === type.value
-                        ? 'from-purple-600 to-indigo-600'
-                        : 'from-gray-700 to-gray-800'
-                    } shadow-md`}>
-                      <i className={`bi ${type.icon} ${connectionType === type.value ? 'text-white' : 'text-gray-300'} text-lg`}></i>
+                    
+                    <div className="px-3 py-1.5 rounded-full bg-indigo-900/30 text-indigo-300 text-sm border border-indigo-700/30 flex items-center">
+                      <i className={`bi ${RELATIONSHIP_DISPLAY[relationshipType]?.icon || 'bi-link'} mr-1.5`}></i>
+                      <span>{RELATIONSHIP_DISPLAY[relationshipType]?.name || 'Related'}</span>
                     </div>
-                    <span className={`text-sm font-medium ${connectionType === type.value ? 'text-purple-300' : 'text-neutral-300'}`}>
-                      {type.label}
-                    </span>
+                    
+                    <div className="flex items-center">
+                      <div>
+                        <h3 className="font-bold text-indigo-200 text-right">{targetNode.title}</h3>
+                        <span className="text-xs text-indigo-400 text-right block">{targetNode.category}</span>
+                      </div>
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-indigo-700 to-blue-700 flex items-center justify-center text-white ml-3">
+                        <i className={`bi ${getCategoryIcon(targetNode.category)} text-lg`}></i>
+                      </div>
+                    </div>
                   </div>
-                ))}
-              </div>
-            </div>
-            
-            {/* Connection Strength */}
-            <div className="mb-6">
-              <label className="block text-base font-medium text-white mb-2">
-                Connection Strength: {strength}
-              </label>
-              <input
-                type="range"
-                min="1"
-                max="5"
-                value={strength}
-                onChange={(e) => setStrength(parseInt(e.target.value))}
-                className="w-full h-2 bg-purple-900/50 rounded-lg appearance-none cursor-pointer"
-              />
-              <div className="flex justify-between text-xs text-purple-400 mt-1">
-                <span>Weak</span>
-                <span>Strong</span>
-              </div>
-            </div>
-            
-            {/* Connection Description */}
-            <div className="mb-6">
-              <label htmlFor="description" className="block text-base font-medium text-white mb-2">
-                Connection Description <span className="text-rose-400">*</span>
-              </label>
-              <div className="relative">
-                <textarea
-                  id="description"
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  rows="4"
-                  className="w-full px-5 py-3 pl-12 rounded-xl border-2 border-purple-700 focus:border-purple-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
-                  placeholder="Describe how these nodes are connected..."
-                ></textarea>
-                <div className="absolute left-3 top-3 w-6 h-6 rounded-full bg-gradient-to-br from-purple-500 to-indigo-500 flex items-center justify-center">
-                  <i className="bi bi-link text-white text-sm"></i>
+                </div>
+
+                {/* Relationship Type */}
+                <div className="mb-6">
+                  <label htmlFor="relationshipType" className="block text-base font-medium text-white mb-2">
+                    Relationship Type
+                  </label>
+                  <select
+                    id="relationshipType"
+                    value={relationshipType}
+                    onChange={(e) => setRelationshipType(e.target.value)}
+                    className="w-full px-5 py-3 rounded-xl border-2 border-indigo-700 focus:border-indigo-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
+                  >
+                    {Object.entries(RELATIONSHIP_DISPLAY).map(([key, { name }]) => (
+                      <option key={key} value={key}>{name}</option>
+                    ))}
+                  </select>
+                  <p className="mt-2 text-indigo-400 text-sm">
+                    {RELATIONSHIP_DISPLAY[relationshipType]?.description}
+                  </p>
+                </div>
+
+                {/* Connection Strength */}
+                <div className="mb-6">
+                  <label htmlFor="strength" className="block text-base font-medium text-white mb-2">
+                    Connection Strength: {strength}
+                  </label>
+                  <input
+                    type="range"
+                    id="strength"
+                    min="1"
+                    max="5"
+                    value={strength}
+                    onChange={(e) => setStrength(parseInt(e.target.value))}
+                    className="w-full h-2 bg-indigo-900 rounded-lg appearance-none cursor-pointer"
+                  />
+                  <div className="flex justify-between text-xs text-indigo-400 mt-1">
+                    <span>Weak</span>
+                    <span>Strong</span>
+                  </div>
+                </div>
+
+                {/* Description */}
+                <div className="mb-6">
+                  <label htmlFor="description" className="block text-base font-medium text-white mb-2">
+                    Description <span className="text-rose-400">*</span>
+                  </label>
+                  <textarea
+                    id="description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    rows="4"
+                    className="w-full px-5 py-3 rounded-xl border-2 border-indigo-700 focus:border-indigo-500 bg-black/60 text-white backdrop-blur-sm shadow-sm focus:shadow-md transition-all duration-300"
+                    placeholder="Describe how these nodes are connected"
+                    required
+                  ></textarea>
+                </div>
+
+                {/* Action Buttons */}
+                <div className="flex justify-between mt-8 pt-6 border-t border-indigo-800/30">
+                  <button
+                    type="button"
+                    onClick={handleBackStep}
+                    className="px-6 py-3 rounded-xl border-2 border-indigo-600 text-indigo-300 hover:bg-indigo-900/30 transition-all duration-300 text-center"
+                  >
+                    <i className="bi bi-arrow-left mr-2"></i> Back
+                  </button>
+                  
+                  <button
+                    type="submit"
+                    disabled={submitting || !description.trim()}
+                    className="px-6 py-3 rounded-xl bg-gradient-to-r from-indigo-700 to-blue-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-indigo-600 hover:to-blue-600 cursor-pointer text-center relative overflow-hidden group"
+                    style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
+                  >
+                    <span className="absolute inset-0 bg-gradient-to-r from-indigo-600/20 to-blue-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-80"></span>
+                    <div className="relative z-10">
+                      {submitting ? (
+                        <>
+                          <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
+                          Creating Connection...
+                        </>
+                      ) : (
+                        <>
+                          <i className="bi bi-check-circle mr-2"></i>
+                          Create Connection
+                        </>
+                      )}
+                    </div>
+                  </button>
                 </div>
               </div>
-              <div className="flex justify-between text-xs mt-1">
-                <span className={`${description.length > 500 ? 'text-rose-400' : 'text-purple-400'}`}>
-                  {description.length}/500 characters
-                </span>
-              </div>
-            </div>
-          </div>
-
-          {/* Action Buttons */}
-          <div className="flex flex-col-reverse sm:flex-row sm:justify-between sm:items-center gap-4 mt-8 pt-6 border-t border-purple-800/30">
-            <button
-              onClick={() => navigate(-1)}
-              className="px-6 py-3 rounded-xl border-2 border-purple-600 text-purple-300 hover:bg-purple-900/30 transition-all duration-300 text-center"
-              disabled={isCreating}
-            >
-              <i className="bi bi-x-circle mr-2"></i> Cancel
-            </button>
-            
-            <button
-              onClick={handleCreateConnection}
-              disabled={isCreating || !sourceNode || !targetNode || !description.trim() || description.length > 500}
-              className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-purple-600 hover:to-indigo-600 cursor-pointer text-center relative overflow-hidden group"
-              style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
-            >
-              <span className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-80"></span>
-              <div className="relative z-10">
-                {isCreating ? (
-                  <>
-                    <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
-                    Creating Connection...
-                  </>
-                ) : (
-                  <>
-                    <i className="bi bi-link mr-2"></i>
-                    Create Connection
-                  </>
-                )}
-              </div>
-            </button>
-          </div>
+            )}
+          </form>
         </div>
       </motion.div>
     </div>
-  )
-}
+  );
+};
 
-export default CreateConnection
+export default CreateConnection;

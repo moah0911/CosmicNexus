@@ -218,6 +218,8 @@ const Connections = () => {
       if (success) {
         // Remove the connection from state
         setConnections(prev => prev.filter(conn => conn.id !== connectionToDelete.id))
+        // Also update filtered connections
+        setFilteredConnections(prev => prev.filter(conn => conn.id !== connectionToDelete.id))
         // Close the modal
         setIsDeleteModalOpen(false)
         // Reset the connection to delete
@@ -376,11 +378,10 @@ const Connections = () => {
 
                   <Link
                     to="/generate-insights"
-                    className="px-6 py-3 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
-                    style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
+                    className="px-6 py-3 rounded-full bg-purple-600 text-white hover:bg-purple-500 transition-all duration-300 inline-block cursor-pointer"
+                    style={{ boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)' }}
                   >
-                    <i className="bi bi-stars mr-2"></i>
-                    <span>Discover AI Connections</span>
+                    Generate New Insights
                   </Link>
                 </div>
               </div>
@@ -494,10 +495,10 @@ const Connections = () => {
 
                   <button
                     onClick={() => setIsSelectModalOpen(true)}
-                    className="px-8 py-4 bg-gradient-to-r from-purple-700 to-indigo-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-purple-600 hover:to-indigo-600 cursor-pointer"
-                    style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
+                    className="px-8 py-4 rounded-full bg-purple-600 text-white text-lg font-medium hover:bg-purple-500 transition-all duration-300 inline-block cursor-pointer"
+                    style={{ boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)' }}
                   >
-                    <i className="bi bi-stars mr-2"></i> Discover AI Connections
+                    Generate New Insights
                   </button>
                 </div>
               </div>

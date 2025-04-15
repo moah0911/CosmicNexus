@@ -257,11 +257,10 @@ const Connections = () => {
           </div>
           <button
             onClick={() => setIsSelectModalOpen(true)}
-            className="mt-4 md:mt-0 px-4 py-2 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] flex items-center hover:from-indigo-600 hover:to-purple-600 cursor-pointer text-sm"
-            style={{ boxShadow: '0 0 10px rgba(99, 102, 241, 0.3)' }}
+            className="mt-4 md:mt-0 px-6 py-3 rounded-full bg-purple-600 text-white hover:bg-purple-500 transition-all duration-300 inline-block cursor-pointer"
+            style={{ boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)' }}
           >
-            <i className="bi bi-stars mr-2"></i>
-            <span>Generate New Discoveries</span>
+            Generate New Insights
           </button>
         </div>
 
@@ -284,10 +283,10 @@ const Connections = () => {
             </p>
             <button
               onClick={() => setIsSelectModalOpen(true)}
-              className="px-8 py-4 bg-gradient-to-r from-indigo-700 to-purple-700 text-white rounded-full shadow-lg hover:shadow-xl transition-all duration-300 transform hover:translate-y-[-2px] hover:from-indigo-600 hover:to-purple-600 cursor-pointer"
-              style={{ boxShadow: '0 0 15px rgba(99, 102, 241, 0.3)' }}
+              className="px-8 py-4 rounded-full bg-purple-600 text-white text-lg font-medium hover:bg-purple-500 transition-all duration-300 inline-block cursor-pointer"
+              style={{ boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)' }}
             >
-              <i className="bi bi-stars mr-2"></i> Generate AI Discoveries
+              Generate New Insights
             </button>
           </div>
         ) : (
@@ -420,28 +419,24 @@ const Connections = () => {
               <button
                 onClick={handleGenerateConnections}
                 disabled={selectedNodes.length < 2 || isGenerating}
-                className="px-6 py-3 rounded-xl bg-gradient-to-r from-purple-700 to-indigo-700 text-white shadow-md hover:shadow-lg transition-all duration-300 transform hover:translate-y-[-2px] disabled:opacity-50 disabled:cursor-not-allowed disabled:transform-none hover:from-purple-600 hover:to-indigo-600 cursor-pointer w-full md:w-auto text-center relative overflow-hidden group"
-                style={{ boxShadow: '0 0 15px rgba(147, 51, 234, 0.3)' }}
+                className="px-6 py-3 rounded-full bg-purple-600 text-white hover:bg-purple-500 transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed disabled:bg-purple-800 cursor-pointer w-full md:w-auto text-center"
+                style={{ boxShadow: '0 0 20px rgba(168, 85, 247, 0.5)' }}
               >
-                <span className="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-indigo-600/20 transform -translate-x-full group-hover:translate-x-0 transition-transform duration-500 opacity-80"></span>
-                <div className="relative z-10">
-                  {isGenerating ? (
-                    <>
-                      <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
-                      <span>Exploring Cosmic Connections...</span>
-                    </>
-                  ) : (
-                    <>
-                      <i className="bi bi-stars mr-2"></i>
-                      <span>Discover Cosmic Connections</span>
-                      {selectedNodes.length >= 2 && (
-                        <span className="ml-2 bg-purple-500/30 text-white text-xs px-2 py-0.5 rounded-full">
-                          {selectedNodes.length} Selected
-                        </span>
-                      )}
-                    </>
-                  )}
-                </div>
+                {isGenerating ? (
+                  <>
+                    <i className="bi bi-arrow-repeat animate-spin mr-2"></i>
+                    <span>Exploring Cosmic Connections...</span>
+                  </>
+                ) : (
+                  <>
+                    Generate New Insights
+                    {selectedNodes.length >= 2 && (
+                      <span className="ml-2 bg-purple-500/30 text-white text-xs px-2 py-0.5 rounded-full">
+                        {selectedNodes.length} Selected
+                      </span>
+                    )}
+                  </>
+                )}
               </button>
             </div>
 
